@@ -1,0 +1,138 @@
+.footer {
+  background: #000000;
+  color: #fdf9f9;
+  padding: 40px 24px 20px;
+  margin-top: 0px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.footer-container {
+  max-width: 100%;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 30px;
+  padding: 0 24px;
+}
+
+.footer-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.footer-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 15px;
+  color: #fdf9f9;
+}
+
+.footer-subtitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #fdf9f9;
+}
+
+.footer-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footer-links li {
+  margin-bottom: 8px;
+}
+
+.footer-links a {
+  text-decoration: none;
+  color: #d0d0d0;
+  font-size: 0.9rem;
+  transition: color 0.3s;
+}
+
+.footer-links a:hover {
+  color: #9b3943;
+}
+
+.footer-bottom {
+  text-align: center;
+  padding-top: 20px;
+  border-top: 1px solid #444;
+  margin-top: 20px;
+  font-size: 0.85rem;
+  color: #999;
+}
+
+/* Stuck / sticky behavior */
+.footer {
+  transition: transform 0.28s ease, bottom 0.28s ease;
+}
+
+.footer.stuck {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 999;
+  box-shadow: 0 -6px 18px rgba(0,0,0,0.25);
+}
+
+.footer.stuck.hidden {
+  transform: translateY(100%);
+}
+
+.footer.stuck.visible {
+  transform: translateY(0);
+}
+.footer-bottom  {
+  color: #190000;
+  text-decoration: none;
+}
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  .footer-container {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 25px;
+  }
+
+  .footer {
+    padding: 30px 16px 15px;
+  }
+}
+
+@media (max-width: 400px) {
+  .footer-container {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .footer {
+    padding: 20px 16px 10px;
+    margin-top: 40px;
+  }
+
+  .footer-title {
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+  }
+
+  .footer-subtitle {
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+  }
+
+  .footer-links a {
+    font-size: 0.85rem;
+  }
+
+  .footer-bottom {
+    font-size: 0.8rem;
+    padding-top: 15px;
+  }
+  .footer-section{
+    display: ruby;
+  }
+}
