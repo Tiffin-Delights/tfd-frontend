@@ -10,8 +10,14 @@ function Hero() {
           No minimums, easy pausing, and chef-made menus that rotate daily.
         </p>
         <div className="hero__cta">
-          <a href="#plans" className="btn primary">Choose your plan</a>
-          <a href="#contact" className="btn ghost">Talk to us</a>
+          <a href="#plans" className="btn primary snake-btn">
+            <span className="snake-btn__border" aria-hidden="true" />
+            <span className="snake-btn__content">Choose your plan</span>
+          </a>
+          <a href="#contact" className="btn ghost snake-btn">
+            <span className="snake-btn__border" aria-hidden="true" />
+            <span className="snake-btn__content">Talk to us</span>
+          </a>
         </div>
         <div className="hero__stats">
           <div>
