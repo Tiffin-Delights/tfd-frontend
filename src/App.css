@@ -203,10 +203,13 @@ body, html {
 }
 
 .hero__card {
-  max-width: 720px; /* increase maximum width to fill more of the hero */
+  max-width: 720px; /* container stays a square to keep image circular */
   width: 100%;
-  height: auto;
+  aspect-ratio: 1/1;
   margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   /* background: #ffffff;
   border: 1px solid #ffe1aa;
   border-radius: 16px;
@@ -216,7 +219,9 @@ body, html {
 
 .hero__card img{
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: cover;
+  aspect-ratio: 1/1;
   border: 1px solid rgba(243, 208, 140, 0.574);
   border-radius: 50%;
 
