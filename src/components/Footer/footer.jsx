@@ -1,76 +1,66 @@
 import "./Footer.css";
-import { useEffect, useRef, useState } from "react";
 
 function Footer() {
-  const footerRef = useRef(null);
-  const lastY = useRef(typeof window !== "undefined" ? window.scrollY : 0);
-  const [stuck, setStuck] = useState(false);
-  const [visible, setVisible] = useState(true);
-
-  useEffect(() => {
-    const onScroll = () => {
-      if (!footerRef.current) return;
-      const rect = footerRef.current.getBoundingClientRect();
-
-      // If footer top is within or above the viewport bottom, consider it reached
-      const reached = rect.top <= window.innerHeight;
-      setStuck(reached);
-
-      const currentY = window.scrollY;
-
-      // show only when we are at the bottom and moving downwards / resting
-      if (reached) {
-        if (currentY > lastY.current) {
-          setVisible(true);
-        } else if (currentY < lastY.current) {
-          setVisible(false);
-        }
-      } else {
-        setVisible(false);
-      }
-      lastY.current = currentY;
-    };
-
-    window.addEventListener("scroll", onScroll, { passive: true });
-    // run once to initialize
-    onScroll();
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
   return (
-    <footer
-      ref={footerRef}
-      className={`footer ${stuck ? "stuck" : ""} ${stuck ? (visible ? "visible" : "hidden") : ""}`}>
+    <footer className="footer">
       <div className="footer-container">
-        {/* Logo Section */}
-       
-
-        {/* About Section */}
+        {/* Company Info */}
         <div className="footer-section">
-          
+          <div className="footer-logo">
+            <h3 className="footer-title">🍱 Tiffin Delight</h3>
+            <p className="footer-tagline">Khaooo! Ghar Jaisa</p>
+          </div>
+          <p className="footer-description">
+            Fresh, homemade meals delivered to your doorstep. 
+            Experience the taste of home with our daily tiffin service.
+          </p>
         </div>
 
-        {/* Logo Ideas Section */}
+        {/* Quick Links */}
         <div className="footer-section">
-          <h4 className="footer-subtitle">Tiffin Delight</h4>
+          <h4 className="footer-subtitle">Quick Links</h4>
           <ul className="footer-links">
-            
+            <li><a href="#home">Home</a></li>
+            <li><a href="#about">About Us</a></li>
+            <li><a href="#menu">Today's Menu</a></li>
+            <li><a href="#plans">Meal Plans</a></li>
+            <li><a href="#testimonials">Reviews</a></li>
           </ul>
         </div>
 
-        {/* Support Section */}
+        {/* Services */}
         <div className="footer-section">
-          <h4 className="footer-subtitle">Support</h4>
+          <h4 className="footer-subtitle">Our Services</h4>
           <ul className="footer-links">
-            <li><a href="#help">Help Center</a></li>
-            <li><a href="mailto:support@myfreelogomaker.com">support@myfreelogomaker.com</a></li>
+            <li><a href="#delivery">Home Delivery</a></li>
+            <li><a href="#subscription">Meal Subscriptions</a></li>
+            <li><a href="#custom">Custom Meal Plans</a></li>
+            <li><a href="#bulk">Bulk Orders</a></li>
+            <li><a href="#catering">Event Catering</a></li>
           </ul>
+        </div>
+
+        {/* Contact Info */}
+        <div className="footer-section">
+          <h4 className="footer-subtitle">Get in Touch</h4>
+          <ul className="footer-links">
+            <li>📞 +91 98765 43210</li>
+            <li>📧 hello@tiffindelight.com</li>
+            <li>📍 Koramangala, Bangalore</li>
+            <li>🕐 7 AM - 10 PM Daily</li>
+          </ul>
+          <div className="footer-social">
+            <span>Follow Us:</span>
+            <a href="#instagram">📷</a>
+            <a href="#whatsapp">💬</a>
+            <a href="#facebook">📘</a>
+          </div>
         </div>
       </div>
 
       {/* Copyright */}
       <div className="footer-bottom">
-        <p>&copy; 2024 My Free Logo Maker. All rights reserved.</p>
+        <p>&copy; 2024 Tiffin Delight. All rights reserved. • Made with ❤️ for food lovers</p>
       </div>
     </footer>
   );

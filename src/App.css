@@ -331,7 +331,7 @@ body, html {
   font-weight: 700;
 }
 .faq-contact {
-  margin-bottom: 200px;
+  margin-bottom: 5px;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 5px;
