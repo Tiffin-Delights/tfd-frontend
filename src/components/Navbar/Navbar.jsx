@@ -37,11 +37,19 @@ function MyNavbar() {
 
         {/* Right Actions */}
         <div className="nav-right">
-          <img src={loginIcon} alt="Login" className="login-icon" />
           <LoginFlow>
             {(openLogin) => (
-              <button className="login-btn" onClick={openLogin}>
-                Log In
+              <button
+                className="login-btn"
+                onClick={openLogin}
+                type="button"
+                aria-label="Open login options"
+              >
+                <span className="login-btn__border" aria-hidden="true" />
+                <span className="login-btn__content">
+                  <img src={loginIcon} alt="" className="login-icon" aria-hidden="true" />
+                  <span className="login-btn__text">Log In</span>
+                </span>
               </button>
             )}
           </LoginFlow>
