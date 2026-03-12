@@ -2,6 +2,7 @@ import "./Navbar.css";
 import loginIcon from "../../assets/Nav/login-icon.png";
 import logo from "../../assets/Nav/logo.png";
 import { useState } from "react";
+import LoginFlow from "../Auth/LoginFlow";
 
 function MyNavbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -33,8 +34,22 @@ function MyNavbar() {
 
         {/* Right Actions */}
         <div className="nav-right">
-          <img src={loginIcon} alt="Login" className="login-icon" />
-          <button className="login-btn">Log In</button>
+          <LoginFlow>
+            {(openLogin) => (
+              <button
+                className="login-btn"
+                onClick={openLogin}
+                type="button"
+                aria-label="Open login options"
+              >
+                <span className="login-btn__border" aria-hidden="true" />
+                <span className="login-btn__content">
+                  <img src={loginIcon} alt="" className="login-icon" aria-hidden="true" />
+                  <span className="login-btn__text">Log In</span>
+                </span>
+              </button>
+            )}
+          </LoginFlow>
 
           {/* Hamburger Menu */}
           <div className={`hamburger ${isMenuOpen ? "active" : ""}`} onClick={toggleMenu}>

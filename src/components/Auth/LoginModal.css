@@ -1,0 +1,218 @@
+/* ── Backdrop ── */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: backdropIn 0.2s ease;
+}
+
+@keyframes backdropIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Card ── */
+.modal-card {
+  background: #fff;
+  border-radius: 18px;
+  padding: 36px 32px 28px;
+  width: 100%;
+  max-width: 420px;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+  animation: cardIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes cardIn {
+  from { transform: scale(0.88) translateY(24px); opacity: 0; }
+  to   { transform: scale(1)    translateY(0);    opacity: 1; }
+}
+
+/* ── Close button ── */
+.modal-close {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  color: #888;
+  cursor: pointer;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 6px;
+  transition: background 0.15s, color 0.15s;
+}
+.modal-close:hover {
+  background: #f0e4d0;
+  color: #E37434;
+}
+
+/* ── Back button ── */
+.modal-back {
+  background: none;
+  border: none;
+  color: #E37434;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  letter-spacing: 0.03em;
+  transition: opacity 0.15s;
+}
+.modal-back:hover { opacity: 0.75; }
+
+/* ── Branding accent bar ── */
+.modal-accent {
+  width: 44px;
+  height: 4px;
+  background: linear-gradient(90deg, #E37434, #ffb53e);
+  border-radius: 4px;
+  margin: 0 0 20px 0;
+}
+
+/* ── Title / subtitle ── */
+.modal-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #134222;
+  margin: 0 0 4px;
+}
+
+.modal-subtitle {
+  font-size: 0.85rem;
+  color: #888;
+  margin: 0 0 24px;
+}
+
+/* ── Role selector cards ── */
+.role-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.role-card {
+  border: 2px solid #ead9c4;
+  border-radius: 14px;
+  padding: 22px 14px 18px;
+  background: #fffbf5;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.role-card:hover {
+  border-color: #E37434;
+  box-shadow: 0 6px 20px rgba(227, 116, 52, 0.14);
+  transform: translateY(-2px);
+}
+
+.role-card__icon {
+  font-size: 2.2rem;
+  line-height: 1;
+}
+
+.role-card__label {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #134222;
+}
+
+.role-card__sub {
+  font-size: 0.74rem;
+  color: #888;
+  line-height: 1.4;
+}
+
+/* ── Form fields ── */
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 4px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.form-group label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #444;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.form-group input {
+  padding: 11px 14px;
+  border: 1.5px solid #e0d0bc;
+  border-radius: 10px;
+  font-size: 0.93rem;
+  font-family: inherit;
+  color: #1a1a1a;
+  background: #fffbf5;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.form-group input:focus {
+  border-color: #E37434;
+  box-shadow: 0 0 0 3px rgba(227, 116, 52, 0.12);
+}
+.form-group input::placeholder {
+  color: #bbb;
+}
+
+/* ── Submit button ── */
+.modal-submit {
+  margin-top: 8px;
+  padding: 13px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #E37434, #ffb53e);
+  color: #fff;
+  font-size: 0.97rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(227, 116, 52, 0.3);
+  transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+}
+.modal-submit:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 26px rgba(227, 116, 52, 0.38);
+}
+.modal-submit:active {
+  transform: translateY(0);
+  opacity: 0.9;
+}
+
+/* ── Divider ── */
+.modal-divider {
+  border: none;
+  border-top: 1.5px solid #f0e8db;
+  margin: 18px 0 14px;
+}
+
+/* ── Footer note ── */
+.modal-footnote {
+  font-size: 0.75rem;
+  color: #aaa;
+  text-align: center;
+  margin-top: 6px;
+}
