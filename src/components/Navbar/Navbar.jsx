@@ -19,10 +19,7 @@ function MyNavbar() {
       <nav className="navbar">
         {/* Logo */}
         <div className="nav-left">
-          <img style={{
-            width: 'auto',
-            height: '150px'
-          }} src= {logo} alt="TB" className="logo" />
+          <img src={logo} alt="TB" className="logo" />
           {/* <span className="brand-name">Tiffin Delight</span> */}
         </div>
 
