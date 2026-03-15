@@ -90,6 +90,99 @@ body, html {
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
 }
 
+.snake-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  overflow: hidden;
+  isolation: isolate;
+  text-decoration: none;
+}
+
+.btn.primary.snake-btn,
+.btn.ghost.snake-btn {
+  background: transparent;
+  border: none;
+  box-shadow: 0 10px 22px rgba(95, 37, 10, 0.2);
+}
+
+.snake-btn__border {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.snake-btn__border::before {
+  content: "";
+  position: absolute;
+  inset: -140%;
+  background: conic-gradient(
+    from 0deg,
+    rgba(255, 248, 236, 0) 0deg,
+    rgba(255, 248, 236, 0) 250deg,
+    #fffdf7 288deg,
+    #ffcf8b 316deg,
+    #7d2f37 338deg,
+    rgba(255, 248, 236, 0) 360deg
+  );
+  animation: heroSnakeBorder 2.2s linear infinite;
+}
+
+.snake-btn__border::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border-radius: inherit;
+}
+
+.btn.primary.snake-btn .snake-btn__border::after {
+  background: linear-gradient(135deg, #cf6228, #dd7a3c);
+}
+
+.btn.ghost.snake-btn .snake-btn__border::after {
+  background: linear-gradient(135deg, #a14c57, #8f3842);
+}
+
+.snake-btn__content {
+  position: relative;
+  z-index: 1;
+  padding: 12px 18px;
+  margin: 2px;
+  border-radius: inherit;
+  font-weight: 700;
+}
+
+.btn.primary.snake-btn .snake-btn__content {
+  background: linear-gradient(135deg, #ffe29f, #ffcc65);
+  color: #134222;
+}
+
+.btn.ghost.snake-btn .snake-btn__content {
+  background: linear-gradient(135deg, #fffdf7, #fff8ec);
+  color: #7d2f37;
+}
+
+.snake-btn:hover .snake-btn__content {
+  background: linear-gradient(135deg, #8f3842, #7d2f37);
+  color: #fffdf8;
+}
+
+.snake-btn:hover {
+  box-shadow: 0 14px 30px rgba(125, 47, 55, 0.26);
+}
+
+@keyframes heroSnakeBorder {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
 .hero__stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
