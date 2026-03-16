@@ -22,7 +22,6 @@ function App() {
         <Testimonials />
         <FAQ />
       </main>
-      <Footer />
     </>
   );
 }

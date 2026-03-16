@@ -1,4 +1,5 @@
 import SectionHead from "./SectionHead";
+import Footer from "./Footer/footer";
 
 const faqs = [
   { q: "Can I pause mid-week?", a: "Yes, pause or skip a day before 9 PM for zero charge." },
@@ -56,6 +57,8 @@ function FAQ() {
           </form>
         </div>
       </div>
+
+      <Footer />
     </section>
   );
 }
