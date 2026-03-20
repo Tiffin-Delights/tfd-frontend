@@ -327,9 +327,11 @@ body, html {
 }
 
 .stat-number {
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--text-accent);
+  font-size: 10px;
+  font-weight: 500;
+  /* color: var(--text-accent);
+   */
+   color:red;
 }
 
 .stat-label {

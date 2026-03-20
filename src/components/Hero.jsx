@@ -29,12 +29,12 @@ function Hero({ dietTheme = "nonveg" }) {
             <span className="stat-label">Meals served weekly</span>
           </div>
           <div>
-            <span className="stat-number">35 min</span>
-            <span className="stat-label">Average delivery time</span>
+            {/* <span className="stat-number">35 min</span> */}
+            {/* <span className="stat-label">Average delivery time</span> */}
           </div>
           <div>
-            <span className="stat-number">4.8★</span>
-            <span className="stat-label">Customer rating</span>
+            {/* <span className="stat-number">4.8★</span> */}
+            {/* <span className="stat-label">Customer rating</span> */}
           </div>
         </div>
       </div>
