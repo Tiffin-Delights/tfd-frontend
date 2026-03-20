@@ -1,26 +1,42 @@
 import { useState } from "react";
 import "./LoginModal.css";
+import { loginUser } from "../../api/client";
 
-// Placeholder destination for provider dashboard
-const PROVIDER_PORTAL_URL = "https://provider.tiffindelight.com";
-
-function ProviderLoginModal({ onBack, onClose }) {
+function ProviderLoginModal({ onBack, onClose, onLoginSuccess }) {
   const [form, setForm] = useState({
     businessName: "",
     providerId: "",
     email: "",
     password: "",
   });
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Placeholder action: open the provider portal in a new tab
-    window.open(PROVIDER_PORTAL_URL, "_blank", "noopener,noreferrer");
-    onClose();
+    setError("");
+    setIsSubmitting(true);
+
+    try {
+      const result = await loginUser(form.email, form.password);
+      if (result?.user?.role !== "provider" && result?.user?.role !== "admin") {
+        setError("This account is not a provider/admin account.");
+        return;
+      }
+
+      if (onLoginSuccess) {
+        onLoginSuccess(result);
+      }
+      onClose();
+    } catch (err) {
+      setError(err.message || "Login failed. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -97,8 +113,10 @@ function ProviderLoginModal({ onBack, onClose }) {
             />
           </div>
 
-          <button type="submit" className="modal-submit">
-            Log In to Provider Dashboard
+          {error && <p className="modal-error">{error}</p>}
+
+          <button type="submit" className="modal-submit" disabled={isSubmitting}>
+            {isSubmitting ? "Logging in..." : "Log In to Provider Dashboard"}
           </button>
         </form>
 

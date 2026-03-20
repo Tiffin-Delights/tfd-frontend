@@ -1,21 +1,32 @@
 import { useState } from "react";
 import "./LoginModal.css";
+import { loginUser } from "../../api/client";
 
-// Placeholder destination for customer portal
-const CUSTOMER_PORTAL_URL = "https://customer.tiffindelight.com";
-
-function CustomerLoginModal({ onBack, onClose }) {
+function CustomerLoginModal({ onBack, onClose, onLoginSuccess }) {
   const [form, setForm] = useState({ email: "", password: "" });
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Placeholder action: open the customer portal in a new tab
-    window.open(CUSTOMER_PORTAL_URL, "_blank", "noopener,noreferrer");
-    onClose();
+    setError("");
+    setIsSubmitting(true);
+
+    try {
+      const result = await loginUser(form.email, form.password);
+      if (onLoginSuccess) {
+        onLoginSuccess(result);
+      }
+      onClose();
+    } catch (err) {
+      setError(err.message || "Login failed. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -62,8 +73,10 @@ function CustomerLoginModal({ onBack, onClose }) {
             />
           </div>
 
-          <button type="submit" className="modal-submit">
-            Log In to My Account
+          {error && <p className="modal-error">{error}</p>}
+
+          <button type="submit" className="modal-submit" disabled={isSubmitting}>
+            {isSubmitting ? "Logging in..." : "Log In to My Account"}
           </button>
         </form>
 
