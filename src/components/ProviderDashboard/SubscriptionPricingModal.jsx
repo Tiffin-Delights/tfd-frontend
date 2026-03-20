@@ -21,6 +21,7 @@ function SubscriptionPricingModal({ auth, isOpen, onClose, onUpdateSuccess, onPr
   const loadPricing = async () => {
     try {
       setLoading(true);
+      setError(null);
       const response = await apiRequest("/providers/pricing", {
         token: auth?.token,
       });
@@ -32,6 +33,7 @@ function SubscriptionPricingModal({ auth, isOpen, onClose, onUpdateSuccess, onPr
       }
     } catch (err) {
       console.error("Failed to load pricing:", err);
+      setError("Could not load current pricing");
     } finally {
       setLoading(false);
     }

@@ -18,9 +18,14 @@ from app.models import (
 class UserRegisterRequest(BaseModel):
     name: str = Field(min_length=2, max_length=120)
     email: EmailStr
+    phone: str = Field(min_length=8, max_length=20)
     password: str = Field(min_length=6, max_length=128)
     role: UserRole = UserRole.customer
     location: str | None = Field(default=None, max_length=120)
+    delivery_address: str | None = Field(default=None, min_length=8, max_length=500)
+    mess_name: str | None = Field(default=None, min_length=2, max_length=180)
+    city: str | None = Field(default=None, min_length=2, max_length=120)
+    contact: str | None = Field(default=None, min_length=8, max_length=20)
 
 
 class UserResponse(BaseModel):
@@ -30,8 +35,10 @@ class UserResponse(BaseModel):
     user_id: int
     name: str
     email: EmailStr
+    phone: str | None
     role: UserRole
     location: str | None
+    delivery_address: str | None
 
 
 class LoginRequest(BaseModel):
@@ -62,6 +69,8 @@ class ProviderResponse(BaseModel):
     city: str
     contact: str
     rating: Decimal
+    weekly_price: Decimal
+    monthly_price: Decimal
 
 
 class ProviderPricingResponse(BaseModel):
@@ -101,6 +110,11 @@ class MenuItemResponse(BaseModel):
 
 
 class OrderCreateRequest(BaseModel):
+    """Create a subscription order (subscription-only; one-time orders not supported).
+    
+    Note: This MVP accepts only order_type='subscription'. All transactions are subscription-based.
+    Use /subscriptions/manage endpoint to create subscriptions with pricing and plan details.
+    """
     provider_id: int
     order_type: OrderType
     start_date: date
@@ -150,6 +164,9 @@ class SubscriptionResponse(BaseModel):
 
 class SubscriptionDetailResponse(SubscriptionResponse):
     customer_name: str | None = None
+    customer_email: str | None = None
+    customer_phone: str | None = None
+    customer_location: str | None = None
     duration_days: int | None = None
     created_at: datetime | None = None
 

@@ -2,6 +2,11 @@
 
 This repository contains a simple React/Vite frontend that demonstrates a marketing-style landing page using a warm, earthy color palette.
 
+## Setup Guides
+
+- Frontend detailed setup: `FRONTEND_SETUP.md`
+- Backend detailed setup: `backend/BACKEND_SETUP.md`
+
 ## 🚀 Getting Started (for beginners)
 
 This section walks through every step required to get the project up and running on a fresh machine. Don’t worry if you’re new to Git, Node, or npm — just follow the commands in order.

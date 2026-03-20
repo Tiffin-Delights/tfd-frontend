@@ -2,13 +2,8 @@ import { useState } from "react";
 import "./LoginModal.css";
 import { loginUser } from "../../api/client";
 
-function ProviderLoginModal({ onBack, onClose, onLoginSuccess }) {
-  const [form, setForm] = useState({
-    businessName: "",
-    providerId: "",
-    email: "",
-    password: "",
-  });
+function ProviderLoginModal({ onBack, onClose, onLoginSuccess, onSwitchToSignup }) {
+  const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -58,34 +53,6 @@ function ProviderLoginModal({ onBack, onClose, onLoginSuccess }) {
 
         <form className="modal-form" onSubmit={handleSubmit} noValidate>
           <div className="form-group">
-            <label htmlFor="prov-business">Business Name</label>
-            <input
-              id="prov-business"
-              name="businessName"
-              type="text"
-              placeholder="e.g. Sharma Tiffin Services"
-              value={form.businessName}
-              onChange={handleChange}
-              autoComplete="organization"
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="prov-id">Provider ID</label>
-            <input
-              id="prov-id"
-              name="providerId"
-              type="text"
-              placeholder="e.g. TFD-2024-00123"
-              value={form.providerId}
-              onChange={handleChange}
-              autoComplete="off"
-              required
-            />
-          </div>
-
-          <div className="form-group">
             <label htmlFor="prov-email">Email Address</label>
             <input
               id="prov-email"
@@ -122,7 +89,10 @@ function ProviderLoginModal({ onBack, onClose, onLoginSuccess }) {
 
         <hr className="modal-divider" />
         <p className="modal-footnote">
-          New provider? Register on the provider portal.
+          New provider?{" "}
+          <button type="button" className="modal-link" onClick={onSwitchToSignup}>
+            Create provider account
+          </button>
         </p>
       </div>
     </div>

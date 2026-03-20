@@ -74,6 +74,18 @@ function SubscribersModal({ auth, isOpen, onClose }) {
                     </div>
                     <div className="subscriber-details">
                       <div className="detail-row">
+                        <span>Email:</span>
+                        <strong>{sub.customer_email || "-"}</strong>
+                      </div>
+                      <div className="detail-row">
+                        <span>Phone:</span>
+                        <strong>{sub.customer_phone || "-"}</strong>
+                      </div>
+                      <div className="detail-row">
+                        <span>Location:</span>
+                        <strong>{sub.customer_location || "-"}</strong>
+                      </div>
+                      <div className="detail-row">
                         <span>Plan Type:</span>
                         <strong>{sub.plan_type}</strong>
                       </div>
