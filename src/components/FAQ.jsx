@@ -29,7 +29,7 @@ function FAQ() {
           </div>
         </div>
 
-        <div className="cta-card contact-card">
+        {/* <div className="cta-card contact-card">
           <h2>Ready for your first tiffin?</h2>
           <p>Share your slot and location. We’ll confirm within 10 minutes.</p>
           <form className="cta-form">
@@ -54,8 +54,7 @@ function FAQ() {
             </div>
             <button type="button" className="btn primary block">Request a callback</button>
             {/* <p className="note">We respond on WhatsApp & SMS during working hours.</p> */}
-          </form>
-        </div>
+         
       </div>
 
       <Footer />

@@ -4,7 +4,13 @@ import logo from "../../assets/Nav/logo.png";
 import { useState, useEffect } from "react";
 import LoginFlow from "../Auth/LoginFlow";
 
-function MyNavbar({ onLoginSuccess, auth: parentAuth, setAuth: setParentAuth }) {
+function MyNavbar({
+  onLoginSuccess,
+  auth: parentAuth,
+  setAuth: setParentAuth,
+  dietTheme,
+  onThemeToggle,
+}) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [auth, setAuth] = useState(parentAuth);
 
@@ -54,8 +60,23 @@ function MyNavbar({ onLoginSuccess, auth: parentAuth, setAuth: setParentAuth }) 
         <ul className={`nav-menu ${isMenuOpen ? "active" : ""}`}>
           <li><a href="#home" onClick={closeMenu}>Home</a></li>
           <li><a href="#about" onClick={closeMenu}>About Us</a></li>
-          <li><a href="#plans" onClick={closeMenu}>Your Tiffin</a></li>
+          <li><a href="#menu" onClick={closeMenu}>Highlights</a></li>
           <li><a href="#contact" onClick={closeMenu}>Contact Us</a></li>
+          <li className="diet-toggle-item">
+            <button
+              type="button"
+              className={`diet-toggle ${dietTheme === "veg" ? "is-veg" : "is-nonveg"}`}
+              onClick={onThemeToggle}
+              aria-label={`Switch to ${dietTheme === "veg" ? "non-veg" : "veg"} theme`}
+              aria-pressed={dietTheme === "veg"}
+            >
+              <span className="diet-toggle__label diet-toggle__label--left">Non-Veg</span>
+              <span className="diet-toggle__track" aria-hidden="true">
+                <span className="diet-toggle__thumb" />
+              </span>
+              <span className="diet-toggle__label diet-toggle__label--right">Veg</span>
+            </button>
+          </li>
         </ul>
 
         {/* Right Actions */}
