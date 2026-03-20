@@ -1,5 +1,9 @@
 import tfn from "../assets/tfn.jpg";
-function Hero() {
+import vegImage from "../assets/veg.jpeg";
+
+function Hero({ dietTheme = "nonveg" }) {
+  const heroImage = dietTheme === "veg" ? vegImage : tfn;
+
   return (
     <section className="hero" id="home">
       <div className="hero__content">
@@ -9,7 +13,7 @@ function Hero() {
           Pick your plan, lock your timings, and let us handle the rest.
           No minimums, easy pausing, and chef-made menus that rotate daily.
         </p>
-        <div className="hero__cta">
+        {/* <div className="hero__cta">
           <a href="#plans" className="btn primary snake-btn">
             <span className="snake-btn__border" aria-hidden="true" />
             <span className="snake-btn__content">Choose your plan</span>
@@ -18,7 +22,7 @@ function Hero() {
             <span className="snake-btn__border" aria-hidden="true" />
             <span className="snake-btn__content">Talk to us</span>
           </a>
-        </div>
+        </div> */}
         <div className="hero__stats">
           <div>
             <span className="stat-number">1200+</span>
@@ -42,7 +46,7 @@ function Hero() {
           <li><span>Phulka (2)</span><span className="pill">Whole wheat</span></li>
           <li><span>Cucumber Raita</span><span className="pill">Cool</span></li>
         </ul> */}
-        <img src={tfn} alt="Today's Tiffin" className="tiffin-image" />
+        <img src={heroImage} alt="Today's Tiffin" className="tiffin-image" />
       </div>
     </section>
   );

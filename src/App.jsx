@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./App.css";
 import MyNavbar from "./components/Navbar/Navbar";
 import Footer from "./components/Footer/footer";
@@ -13,6 +13,13 @@ import MessProviders from "./components/MessProviders";
 import ProviderDashboard from "./components/ProviderDashboard/ProviderDashboard";
 
 function App() {
+  const [dietTheme, setDietTheme] = useState(() => {
+    try {
+      return localStorage.getItem("tfd_diet_theme") || "nonveg";
+    } catch {
+      return "nonveg";
+    }
+  });
   const [auth, setAuth] = useState(() => {
     try {
       const raw = localStorage.getItem("tfd_auth");
@@ -42,9 +49,24 @@ function App() {
     setShowProvidersPage(false);
   };
 
+  useEffect(() => {
+    document.documentElement.dataset.theme = dietTheme;
+    try {
+      localStorage.setItem("tfd_diet_theme", dietTheme);
+    } catch {
+      // ignore storage write issues
+    }
+  }, [dietTheme]);
+
   return (
     <>
-      <MyNavbar onLoginSuccess={handleLoginSuccess} auth={auth} setAuth={setAuth} />
+      <MyNavbar
+        onLoginSuccess={handleLoginSuccess}
+        auth={auth}
+        setAuth={setAuth}
+        dietTheme={dietTheme}
+        onThemeToggle={() => setDietTheme((current) => (current === "veg" ? "nonveg" : "veg"))}
+      />
       <main className="page">
         {auth?.user?.role === "provider" ? (
           <ProviderDashboard auth={auth} />
@@ -59,10 +81,10 @@ function App() {
           </>
         ) : (
           <>
-            <Hero />
+            <Hero dietTheme={dietTheme} />
             <About />
-            <Plans />
-            <HowItWorks />
+            {/* <Plans /> */}
+            <HowItWorks dietTheme={dietTheme} />
             <Menu />
             <Testimonials />
             <FAQ />
