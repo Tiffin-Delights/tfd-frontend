@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { uploadMenuDish, getMyMenu, deleteMenuDish } from "../../api/client";
 import "./MenuUploadModal.css";
 
-function MenuUploadModal({ auth, providerId, isOpen, onClose, onUploadSuccess }) {
+function MenuUploadModal({ auth, isOpen, onClose, onUploadSuccess }) {
   const [formData, setFormData] = useState({
     day: "monday",
     meal_type: "breakfast",
@@ -95,10 +95,15 @@ function MenuUploadModal({ auth, providerId, isOpen, onClose, onUploadSuccess })
   const handleDeleteItem = async (itemId) => {
     if (!confirm("Are you sure you want to delete this menu item?")) return;
 
+    if (!Number.isFinite(Number(itemId))) {
+      alert("Unable to delete this item because its ID is invalid. Please refresh and try again.");
+      return;
+    }
+
     try {
       setDeleteLoading(itemId);
       await deleteMenuDish(auth?.token, itemId);
-      setMenuItems(menuItems.filter(item => item.id !== itemId));
+      setMenuItems(menuItems.filter((item) => resolveMenuItemId(item) !== itemId));
       await loadExistingMenu();
     } catch (err) {
       alert("Failed to delete menu item: " + err.message);
@@ -117,6 +122,12 @@ function MenuUploadModal({ auth, providerId, isOpen, onClose, onUploadSuccess })
       grouped[key].push(item);
     });
     return grouped;
+  };
+
+  const resolveMenuItemId = (item) => {
+    const rawId = item?.menu_id ?? item?.id;
+    const id = Number(rawId);
+    return Number.isFinite(id) ? id : null;
   };
 
   if (!isOpen) return null;
@@ -241,8 +252,12 @@ function MenuUploadModal({ auth, providerId, isOpen, onClose, onUploadSuccess })
                         {day.charAt(0).toUpperCase() + day.slice(1)} - {mealType.charAt(0).toUpperCase() + mealType.slice(1)}
                       </h4>
                       <div className="menu-items-list">
-                        {items.map((item) => (
-                          <div key={item.id} className="menu-item-card">
+                        {items.map((item, index) => {
+                          const itemId = resolveMenuItemId(item);
+                          const reactKey = itemId ?? `${key}-${index}`;
+
+                          return (
+                          <div key={reactKey} className="menu-item-card">
                             <div className="menu-item-content">
                               <div className="menu-item-dishes">
                                 {Array.isArray(item.dishes) 
@@ -253,13 +268,14 @@ function MenuUploadModal({ auth, providerId, isOpen, onClose, onUploadSuccess })
                             </div>
                             <button
                               className="delete-item-btn"
-                              onClick={() => handleDeleteItem(item.id)}
-                              disabled={deleteLoading === item.id}
+                              onClick={() => handleDeleteItem(itemId)}
+                              disabled={itemId === null || deleteLoading === itemId}
                             >
-                              {deleteLoading === item.id ? "..." : "🗑️"}
+                              {deleteLoading === itemId ? "..." : "🗑️"}
                             </button>
                           </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   );

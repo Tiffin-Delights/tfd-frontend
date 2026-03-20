@@ -46,6 +46,7 @@ class DayOfWeek(str, Enum):
 
 class OrderType(str, Enum):
     subscription = "subscription"
+    # TODO: v2.0 - Remove one-time after subscription MVP is stable; MVP is subscription-only
     one_time = "one-time"
 
 
@@ -73,9 +74,11 @@ class User(Base):
     user_id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String(120), nullable=False)
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
+    phone: Mapped[str | None] = mapped_column(String(20), unique=True, nullable=True, index=True)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     role: Mapped[UserRole] = mapped_column(SqlEnum(UserRole), nullable=False, index=True)
     location: Mapped[str | None] = mapped_column(String(120), nullable=True, index=True)
+    delivery_address: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

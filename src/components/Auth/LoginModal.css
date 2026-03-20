@@ -27,6 +27,12 @@
   animation: cardIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+.modal-card--large {
+  max-width: 520px;
+  max-height: min(92vh, 860px);
+  overflow-y: auto;
+}
+
 @keyframes cardIn {
   from { transform: scale(0.88) translateY(24px); opacity: 0; }
   to   { transform: scale(1)    translateY(0);    opacity: 1; }
@@ -159,7 +165,8 @@
   text-transform: uppercase;
 }
 
-.form-group input {
+.form-group input,
+.form-group textarea {
   padding: 11px 14px;
   border: 1.5px solid #e0d0bc;
   border-radius: 10px;
@@ -170,12 +177,19 @@
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
-.form-group input:focus {
+.form-group input:focus,
+.form-group textarea:focus {
   border-color: #E37434;
   box-shadow: 0 0 0 3px rgba(227, 116, 52, 0.12);
 }
-.form-group input::placeholder {
+.form-group input::placeholder,
+.form-group textarea::placeholder {
   color: #bbb;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 88px;
 }
 
 /* ── Submit button ── */
@@ -229,4 +243,18 @@
   color: #aaa;
   text-align: center;
   margin-top: 6px;
+}
+
+.modal-link {
+  border: none;
+  background: none;
+  color: #E37434;
+  font-size: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+}
+
+.modal-link:hover {
+  text-decoration: underline;
 }

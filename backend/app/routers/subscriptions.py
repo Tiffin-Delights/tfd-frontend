@@ -1,3 +1,5 @@
+from datetime import date
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
@@ -47,6 +49,20 @@ def manage_subscription(
     if not provider:
         raise HTTPException(status_code=404, detail="Provider not found")
 
+    # Pricing validation: provider must have set pricing before accepting subscriptions
+    if provider.weekly_price <= 0 or provider.monthly_price <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Provider has not configured pricing yet. Please try again later.",
+        )
+
+    # Start-date validation: subscription cannot start in the past
+    if payload.start_date < date.today():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Subscription start date cannot be in the past.",
+        )
+
     if payload.status == SubscriptionStatus.active:
         existing_active = (
             db.query(Subscription)
@@ -63,7 +79,7 @@ def manage_subscription(
         if existing_active:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail=f"You already have an active {payload.plan_type.value} subscription with this mess.",
+                detail=f"Active {payload.plan_type.value.title()} subscription already exists from {existing_active.start_date} to {existing_active.end_date}. Please cancel it first.",
             )
 
     subscription = (
@@ -108,7 +124,13 @@ def list_provider_subscriptions(
     provider = _resolve_provider(db, current_user, provider_id)
 
     subscriptions = (
-        db.query(Subscription, User.name.label("customer_name"))
+        db.query(
+            Subscription,
+            User.name.label("customer_name"),
+            User.email.label("customer_email"),
+            User.phone.label("customer_phone"),
+            User.location.label("customer_location"),
+        )
         .join(User, Subscription.user_id == User.user_id)
         .filter(Subscription.provider_id == provider.provider_id)
         .order_by(Subscription.created_at.desc())
@@ -125,10 +147,13 @@ def list_provider_subscriptions(
             "end_date": sub.end_date,
             "status": sub.status,
             "customer_name": customer_name,
+            "customer_email": customer_email,
+            "customer_phone": customer_phone,
+            "customer_location": customer_location,
             "duration_days": (sub.end_date - sub.start_date).days,
             "created_at": sub.created_at,
         }
-        for sub, customer_name in subscriptions
+        for sub, customer_name, customer_email, customer_phone, customer_location in subscriptions
     ]
 
 

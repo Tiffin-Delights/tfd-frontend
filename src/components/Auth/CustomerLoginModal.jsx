@@ -2,7 +2,7 @@ import { useState } from "react";
 import "./LoginModal.css";
 import { loginUser } from "../../api/client";
 
-function CustomerLoginModal({ onBack, onClose, onLoginSuccess }) {
+function CustomerLoginModal({ onBack, onClose, onLoginSuccess, onSwitchToSignup }) {
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -82,7 +82,10 @@ function CustomerLoginModal({ onBack, onClose, onLoginSuccess }) {
 
         <hr className="modal-divider" />
         <p className="modal-footnote">
-          New here? Sign up on the customer portal.
+          New here?{" "}
+          <button type="button" className="modal-link" onClick={onSwitchToSignup}>
+            Create customer account
+          </button>
         </p>
       </div>
     </div>

@@ -11,6 +11,7 @@ import Testimonials from "./components/Testimonials";
 import FAQ from "./components/FAQ";
 import MessProviders from "./components/MessProviders";
 import ProviderDashboard from "./components/ProviderDashboard/ProviderDashboard";
+import CustomerDashboard from "./components/CustomerDashboard/CustomerDashboard";
 
 function App() {
   const [auth, setAuth] = useState(() => {
@@ -21,7 +22,9 @@ function App() {
       return null;
     }
   });
-  const [showProvidersPage, setShowProvidersPage] = useState(Boolean(auth?.token));
+  const [, setShowProvidersPage] = useState(Boolean(auth?.token));
+  const [showCustomerDashboard, setShowCustomerDashboard] = useState(false);
+  const [customerDashboardRefreshKey, setCustomerDashboardRefreshKey] = useState(0);
 
   const handleLoginSuccess = (loginResult) => {
     if (!loginResult?.access_token || !loginResult?.user) {
@@ -36,6 +39,7 @@ function App() {
     setAuth(nextAuth);
     localStorage.setItem("tfd_auth", JSON.stringify(nextAuth));
     setShowProvidersPage(true);
+    setShowCustomerDashboard(false);
   };
 
   const handleBackToHome = () => {
@@ -51,11 +55,30 @@ function App() {
         ) : auth?.token ? (
           <>
             <div className="providers-page-header">
+              {showCustomerDashboard ? (
+                <button className="btn ghost" onClick={() => setShowCustomerDashboard(false)}>
+                  Browse Providers
+                </button>
+              ) : (
+                <button className="btn ghost" onClick={() => setShowCustomerDashboard(true)}>
+                  My Subscriptions
+                </button>
+              )}
               <button className="btn ghost" onClick={handleBackToHome}>
-                Back to Home
+                Logout
               </button>
             </div>
-            <MessProviders auth={auth} />
+            {showCustomerDashboard ? (
+              <CustomerDashboard auth={auth} refreshKey={customerDashboardRefreshKey} />
+            ) : (
+              <MessProviders
+                auth={auth}
+                onSubscriptionCreated={() => {
+                  setCustomerDashboardRefreshKey((prev) => prev + 1);
+                  setShowCustomerDashboard(true);
+                }}
+              />
+            )}
           </>
         ) : (
           <>

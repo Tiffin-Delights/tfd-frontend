@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { apiRequest } from "../../api/client";
 import OrdersModal from "./OrdersModal";
 import SubscribersModal from "./SubscribersModal";
@@ -12,28 +12,64 @@ function ProviderDashboard({ auth }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeModal, setActiveModal] = useState(null);
+  const profileDataRef = useRef(null);
 
   useEffect(() => {
-    const fetchProviderProfile = async () => {
-      try {
+    profileDataRef.current = profileData;
+  }, [profileData]);
+
+  const fetchProviderProfile = useCallback(async ({ background = false } = {}) => {
+    if (!auth?.token) {
+      return;
+    }
+
+    const hasExistingProfile = Boolean(profileDataRef.current);
+
+    try {
+      // Show full-screen loading only for the very first load.
+      if (!background && !hasExistingProfile) {
         setLoading(true);
+      }
+
+      if (!background || !hasExistingProfile) {
         setError(null);
-        const response = await apiRequest("/providers/profile", {
-          token: auth?.token,
-        });
-        setProfileData(response);
-      } catch (err) {
+      }
+
+      const response = await apiRequest("/providers/profile", {
+        token: auth?.token,
+      });
+      setProfileData(response);
+    } catch (err) {
+      if (!background || !hasExistingProfile) {
         setError(err.message || "Failed to load provider profile");
-        console.error("Provider profile error:", err);
-      } finally {
+      }
+      console.error("Provider profile error:", err);
+    } finally {
+      if (!background && !hasExistingProfile) {
         setLoading(false);
       }
-    };
-
-    if (auth?.token) {
-      fetchProviderProfile();
     }
   }, [auth?.token]);
+
+  useEffect(() => {
+    if (!auth?.token) {
+      return;
+    }
+
+    fetchProviderProfile();
+
+    const interval = setInterval(() => {
+      fetchProviderProfile({ background: true });
+    }, 15000);
+
+    const handleWindowFocus = () => fetchProviderProfile({ background: true });
+    window.addEventListener("focus", handleWindowFocus);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("focus", handleWindowFocus);
+    };
+  }, [auth?.token, fetchProviderProfile]);
 
   if (loading) {
     return (

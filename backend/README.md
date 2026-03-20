@@ -2,6 +2,10 @@
 
 This backend implements the core APIs for an online tiffin / mess subscription system.
 
+## Detailed Setup Guide
+
+- `BACKEND_SETUP.md`
+
 ## Stack
 - FastAPI (REST)
 - PostgreSQL
@@ -28,6 +32,19 @@ source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
 uvicorn app.main:app --reload --port 8000
+```
+
+If you run from the project root, use an explicit app directory:
+
+```bash
+/Users/nikhilverma/Desktop/Current_project/tfd-frontend/.venv/bin/python -m uvicorn app.main:app --reload --app-dir backend --port 8000
+```
+
+If signup fails due to missing `users.phone` or `users.delivery_address`, run:
+
+```bash
+cd backend
+/Users/nikhilverma/Desktop/Current_project/tfd-frontend/.venv/bin/python scripts/migrate_add_user_registration_fields.py
 ```
 
 ## API base

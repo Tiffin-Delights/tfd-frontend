@@ -43,7 +43,14 @@ def create_order(
     if not provider:
         raise HTTPException(status_code=404, detail="Provider not found")
 
-    if payload.order_type.value == "subscription" and payload.end_date is None:
+    # Subscription-only enforcement: reject one-time orders
+    if payload.order_type.value != "subscription":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="One-time orders are not supported. Please use /subscriptions/manage to create a subscription.",
+        )
+
+    if payload.end_date is None:
         raise HTTPException(status_code=400, detail="end_date is required for subscription")
 
     order = Order(
