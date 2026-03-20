@@ -195,6 +195,32 @@
   outline-offset: 3px;
 }
 
+/* Auth Section */
+.auth-section {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.user-info {
+  color: #fff8ec;
+  font-size: 0.9rem;
+  font-weight: 500;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.logout-btn {
+  min-width: 100px;
+  background: linear-gradient(135deg, rgba(219, 112, 96, 0.2), rgba(255, 255, 255, 0.1));
+}
+
+.logout-btn:hover .login-btn__content {
+  background: linear-gradient(135deg, #d94c3d, #e55a50);
+}
+
 @keyframes loginSnakeBorder {
   to {
     transform: rotate(1turn);

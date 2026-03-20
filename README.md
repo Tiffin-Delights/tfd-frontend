@@ -129,3 +129,25 @@ src/
 ---
 
 Feel free to open issues or modify as needed. Happy hacking! 🎉
+
+## Backend (FastAPI + PostgreSQL)
+
+Backend code is available in [backend](backend).
+
+### Quick start
+
+1. Move to backend:
+  - `cd backend`
+2. Create and activate virtualenv.
+3. Install dependencies:
+  - `pip install -r requirements.txt`
+4. Set env values in `.env` (or copy from `.env.example`):
+  - `DATABASE_URL=postgresql://postgres:postgres@localhost:5432/tiffin`
+5. Run server:
+  - `uvicorn app.main:app --reload --port 8000`
+
+### Frontend API base URL
+
+Set this in frontend `.env` if needed:
+
+- `VITE_API_BASE_URL=http://127.0.0.1:8000/api/v1`

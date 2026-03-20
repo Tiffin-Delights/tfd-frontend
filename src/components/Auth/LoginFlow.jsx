@@ -16,7 +16,7 @@ import ProviderLoginModal from "./ProviderLoginModal";
  *     {(openLogin) => <button onClick={openLogin}>Log In</button>}
  *   </LoginFlow>
  */
-function LoginFlow({ children }) {
+function LoginFlow({ children, onCustomerLoginSuccess, onProviderLoginSuccess }) {
   // step: null | "select" | "customer" | "provider"
   const [step, setStep] = useState(null);
 
@@ -38,12 +38,20 @@ function LoginFlow({ children }) {
 
       {/* Step 2a – Customer Login */}
       {step === "customer" && (
-        <CustomerLoginModal onBack={goBack} onClose={close} />
+        <CustomerLoginModal
+          onBack={goBack}
+          onClose={close}
+          onLoginSuccess={onCustomerLoginSuccess}
+        />
       )}
 
       {/* Step 2b – Provider Login */}
       {step === "provider" && (
-        <ProviderLoginModal onBack={goBack} onClose={close} />
+        <ProviderLoginModal
+          onBack={goBack}
+          onClose={close}
+          onLoginSuccess={onProviderLoginSuccess}
+        />
       )}
     </>
   );
