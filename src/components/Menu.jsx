@@ -64,7 +64,7 @@ function Menu() {
 
   return (
     <section className="menu" id="menu">
-      <SectionHead eyebrow="See our best" title="Top Providers" />
+      <SectionHead eyebrow="OUR" title="Top Providers" />
       <div className="menu-grid">
         <button
           type="button"

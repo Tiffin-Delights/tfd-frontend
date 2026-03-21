@@ -436,3 +436,15 @@
     gap: 10px;
   }
 }
+
+@media (max-width: 640px) {
+  .modal-overlay {
+    padding: 5px;
+  }
+
+  .modal-content {
+    width: calc(100vw - 10px);
+    max-width: calc(100vw - 10px);
+    max-height: min(92vh, calc(100dvh - 10px));
+  }
+}
