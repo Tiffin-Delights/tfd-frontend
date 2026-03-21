@@ -1,6 +1,7 @@
 import { useState } from "react";
 import "./LoginModal.css";
 import { loginUser } from "../../api/client";
+import { validateLoginForm } from "./authValidation";
 
 function ProviderLoginModal({ onBack, onClose, onLoginSuccess, onSwitchToSignup }) {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -8,12 +9,22 @@ function ProviderLoginModal({ onBack, onClose, onLoginSuccess, onSwitchToSignup 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => {
+    if (error) {
+      setError("");
+    }
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    const validationError = validateLoginForm(form);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -76,8 +87,10 @@ function ProviderLoginModal({ onBack, onClose, onLoginSuccess, onSwitchToSignup 
               value={form.password}
               onChange={handleChange}
               autoComplete="current-password"
+              minLength={6}
               required
             />
+            <p className="form-hint">Password must be at least 6 characters.</p>
           </div>
 
           {error && <p className="modal-error">{error}</p>}

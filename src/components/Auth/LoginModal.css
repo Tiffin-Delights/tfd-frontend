@@ -194,6 +194,12 @@
   min-height: 88px;
 }
 
+.form-hint {
+  margin: 2px 0 0;
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}
+
 /* ── Submit button ── */
 .modal-submit {
   margin-top: 8px;
