@@ -20,7 +20,7 @@ function About() {
 
     const intervalId = window.setInterval(() => {
       setIsFlipping(true);
-    }, 3000);
+    }, 2000);
 
     return () => {
       window.clearInterval(intervalId);
