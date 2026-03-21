@@ -58,6 +58,10 @@
   --state-warn-text: #9d4c1f;
   --state-danger-bg: #fdecec;
   --state-danger-text: #8f1f1f;
+  --page-count-bg: var(--counter-bg);
+  --page-count-text: var(--counter-text);
+  --page-dot-bg: rgba(125, 47, 55, 0.18);
+  --page-dot-active: #7d2f37;
 }
 
 :root[data-theme="veg"] {
@@ -116,6 +120,10 @@
   --state-warn-text: #9d4c1f;
   --state-danger-bg: #fdecec;
   --state-danger-text: #8f1f1f;
+  --page-count-bg: linear-gradient(135deg, rgba(255, 220, 93, 0.94), rgba(241, 188, 42, 0.94));
+  --page-count-text: var(--counter-text);
+  --page-dot-bg: rgba(241, 188, 42, 0.22);
+  --page-dot-active: #f1bc2a;
 }
 
 :root:not([data-theme="veg"]) h2 {
@@ -639,8 +647,8 @@ body, html {
   height: 32px;
   padding: 0 12px;
   border-radius: 999px;
-  background: var(--counter-bg);
-  color: var(--counter-text);
+  background: var(--page-count-bg);
+  color: var(--page-count-text);
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.14em;
@@ -691,13 +699,13 @@ body, html {
   width: 8px;
   height: 8px;
   border-radius: 999px;
-  background: rgba(125, 47, 55, 0.18);
+  background: var(--page-dot-bg);
   transition: transform 0.25s ease, background-color 0.25s ease;
 }
 
 .feature-card-dots span.is-active {
   transform: scale(1.55);
-  background: #7d2f37;
+  background: var(--page-dot-active);
 }
 
 .feature-book:hover,
@@ -1261,8 +1269,8 @@ body, html {
   height: 32px;
   padding: 0 12px;
   border-radius: 999px;
-  background: var(--counter-bg);
-  color: var(--counter-text);
+  background: var(--page-count-bg);
+  color: var(--page-count-text);
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.14em;
@@ -1314,13 +1322,13 @@ body, html {
   width: 8px;
   height: 8px;
   border-radius: 999px;
-  background: rgba(125, 47, 55, 0.18);
+  background: var(--page-dot-bg);
   transition: transform 0.25s ease, background-color 0.25s ease;
 }
 
 .menu-card-dots span.is-active {
   transform: scale(1.55);
-  background: #7d2f37;
+  background: var(--page-dot-active);
 }
 
 .menu-book:hover,
@@ -1474,8 +1482,12 @@ body, html {
 }
 
 @media (max-width: 600px) {
+  .faq {
+    padding-bottom: 0;
+  }
+
   .faq-contact {
-    margin-bottom: 300px;
+    margin-bottom: 16px;
     padding-left: 24px;
     padding-right: 24px;
   }

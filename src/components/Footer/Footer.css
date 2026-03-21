@@ -200,6 +200,7 @@
 
 @media (max-width: 600px) {
   .footer {
+    position: static;
     padding: 40px 16px 20px;
   }
   

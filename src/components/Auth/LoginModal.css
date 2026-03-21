@@ -267,3 +267,16 @@
   color: #b2760c;
   text-decoration: underline;
 }
+
+@media (max-width: 640px) {
+  .modal-backdrop {
+    padding: 5px;
+  }
+
+  .modal-card,
+  .modal-card--large {
+    width: calc(100vw - 10px);
+    max-width: calc(100vw - 10px);
+    max-height: min(92vh, calc(100dvh - 10px));
+  }
+}

@@ -44,7 +44,7 @@ function RoadmapLane({ audience, title, steps }) {
 
     const intervalId = window.setInterval(() => {
       setActiveIndex((prev) => (prev + 1) % steps.length);
-    }, 3000);
+    }, 1500);
 
     return () => {
       window.clearInterval(intervalId);

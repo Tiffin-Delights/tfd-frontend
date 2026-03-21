@@ -332,8 +332,14 @@
 
 /* Responsive */
 @media (max-width: 600px) {
+  .modal-overlay {
+    padding: 5px;
+  }
+
   .modal-content {
-    width: 95%;
+    width: calc(100vw - 10px);
+    max-width: calc(100vw - 10px);
+    max-height: min(92vh, calc(100dvh - 10px));
     border-radius: 14px;
   }
 
