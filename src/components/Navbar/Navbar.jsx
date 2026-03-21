@@ -58,10 +58,14 @@ function MyNavbar({
 
         {/* Center Menu */}
         <ul className={`nav-menu ${isMenuOpen ? "active" : ""}`}>
-          <li><a href="#home" onClick={closeMenu}>Home</a></li>
-          <li><a href="#about" onClick={closeMenu}>About Us</a></li>
-          <li><a href="#menu" onClick={closeMenu}>Highlights</a></li>
-          <li><a href="#contact" onClick={closeMenu}>Contact Us</a></li>
+          {!auth?.token && (
+            <>
+              <li><a href="#home" onClick={closeMenu}>Home</a></li>
+              <li><a href="#about" onClick={closeMenu}>About Us</a></li>
+              <li><a href="#menu" onClick={closeMenu}>Highlights</a></li>
+              <li><a href="#contact" onClick={closeMenu}>Contact Us</a></li>
+            </>
+          )}
           <li className="diet-toggle-item">
             <button
               type="button"
@@ -83,15 +87,17 @@ function MyNavbar({
         <div className="nav-right">
           {auth?.token ? (
             <div className="auth-section">
-              <span className="user-info">{auth?.user?.role === "provider" ? "Provider" : "Customer"}: {auth?.user?.name}</span>
+              <span className="user-info">{auth?.user?.role === "provider" ? "Welcome" : "Welcome"} : {auth?.user?.name}</span>
               <button
                 className="login-btn logout-btn"
                 onClick={handleLogout}
                 type="button"
                 aria-label="Logout"
+                data-tooltip="Log Out"
               >
                 <span className="login-btn__border" aria-hidden="true" />
                 <span className="login-btn__content">
+                  <img src={loginIcon} alt="" className="login-icon" aria-hidden="true" />
                   <span className="login-btn__text">Log Out</span>
                 </span>
               </button>
@@ -129,6 +135,7 @@ function MyNavbar({
                   onClick={openLogin}
                   type="button"
                   aria-label="Open login options"
+                  data-tooltip="Log In"
                 >
                   <span className="login-btn__border" aria-hidden="true" />
                   <span className="login-btn__content">
