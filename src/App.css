@@ -46,6 +46,18 @@
   --header-mobile-bg: #7d2f37;
   --footer-bg: linear-gradient(145deg, rgba(255, 249, 239, 0.98), rgba(255, 235, 199, 0.96));
   --footer-border: rgba(245, 196, 118, 0.2);
+  --panel-shell-bg: linear-gradient(180deg, var(--page-bg) 0%, color-mix(in srgb, var(--page-bg-alt) 84%, #ffffff) 100%);
+  --panel-card-bg: linear-gradient(150deg, rgba(255, 255, 255, 0.98), rgba(255, 247, 229, 0.95));
+  --panel-card-border: color-mix(in srgb, var(--surface-border) 72%, rgba(255, 213, 140, 0.3));
+  --panel-muted-bg: color-mix(in srgb, var(--text-accent) 7%, #fffdf7);
+  --panel-outline-bg: color-mix(in srgb, var(--text-accent) 6%, #ffffff);
+  --panel-outline-border: color-mix(in srgb, var(--text-accent) 20%, rgba(255, 213, 140, 0.4));
+  --state-success-bg: #e9f8ee;
+  --state-success-text: #22643b;
+  --state-warn-bg: #fff5e5;
+  --state-warn-text: #9d4c1f;
+  --state-danger-bg: #fdecec;
+  --state-danger-text: #8f1f1f;
 }
 
 :root[data-theme="veg"] {
@@ -90,8 +102,20 @@
   --header-hover: #dff7df;
   --header-underline: #d2f0d0;
   --header-mobile-bg: #245e35;
-  --footer-bg: linear-gradient(145deg, rgba(244, 252, 241, 0.98), rgba(221, 243, 220, 0.96));
-  --footer-border: rgba(118, 176, 126, 0.2);
+  --footer-bg: linear-gradient(145deg, rgba(251, 246, 197, 0.98), rgba(219, 243, 187, 0.97), rgba(196, 232, 173, 0.96));
+  --footer-border: rgba(172, 186, 89, 0.26);
+  --panel-shell-bg: linear-gradient(180deg, var(--page-bg) 0%, color-mix(in srgb, var(--page-bg-alt) 86%, #ffffff) 100%);
+  --panel-card-bg: linear-gradient(150deg, rgba(254, 255, 253, 0.98), rgba(236, 249, 234, 0.95));
+  --panel-card-border: color-mix(in srgb, var(--surface-border) 78%, rgba(166, 214, 171, 0.38));
+  --panel-muted-bg: color-mix(in srgb, var(--text-accent) 8%, #f8fff7);
+  --panel-outline-bg: color-mix(in srgb, var(--text-accent) 7%, #ffffff);
+  --panel-outline-border: color-mix(in srgb, var(--text-accent) 22%, rgba(166, 214, 171, 0.4));
+  --state-success-bg: #e9f8ee;
+  --state-success-text: #22643b;
+  --state-warn-bg: #fff5e5;
+  --state-warn-text: #9d4c1f;
+  --state-danger-bg: #fdecec;
+  --state-danger-text: #8f1f1f;
 }
 
 :root:not([data-theme="veg"]) h2 {
@@ -329,9 +353,7 @@ body, html {
 .stat-number {
   font-size: 10px;
   font-weight: 500;
-  /* color: var(--text-accent);
-   */
-   color:red;
+  color: var(--text-accent);
 }
 
 .stat-label {
@@ -1674,4 +1696,41 @@ body, html {
     padding-left: 16px;
     padding-right: 16px;
   }
+}
+
+/* Veg mode button palette: keep navbar login/logout unchanged by scoping to .page */
+:root[data-theme="veg"] .page .btn.primary,
+:root[data-theme="veg"] .page .action-btn.primary,
+:root[data-theme="veg"] .page .submit-btn,
+:root[data-theme="veg"] .page .modal-submit,
+:root[data-theme="veg"] .page .form-actions .btn.primary {
+  background: linear-gradient(135deg, #ffd54a, #f7c839);
+  border-color: #f1bc2a;
+  color: #4f3303;
+  box-shadow: 0 10px 22px rgba(241, 188, 42, 0.34);
+}
+
+:root[data-theme="veg"] .page .btn.primary:hover,
+:root[data-theme="veg"] .page .action-btn.primary:hover,
+:root[data-theme="veg"] .page .submit-btn:hover:not(:disabled),
+:root[data-theme="veg"] .page .modal-submit:hover,
+:root[data-theme="veg"] .page .form-actions .btn.primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #ffe167, #ffd84f);
+  box-shadow: 0 12px 26px rgba(255, 216, 79, 0.46);
+}
+
+:root[data-theme="veg"] .page .btn.ghost,
+:root[data-theme="veg"] .page .action-btn.secondary,
+:root[data-theme="veg"] .page .form-actions .btn.ghost {
+  color: #9f6c0a;
+  border-color: rgba(241, 188, 42, 0.45);
+  background: rgba(255, 220, 93, 0.18);
+}
+
+:root[data-theme="veg"] .page .btn.ghost:hover,
+:root[data-theme="veg"] .page .action-btn.secondary:hover,
+:root[data-theme="veg"] .page .form-actions .btn.ghost:hover:not(:disabled) {
+  color: #7f5408;
+  border-color: rgba(255, 216, 79, 0.82);
+  background: rgba(255, 220, 93, 0.32);
 }

@@ -277,11 +277,16 @@
 
 .logout-btn {
   min-width: 100px;
-  background: linear-gradient(135deg, rgba(219, 112, 96, 0.2), rgba(255, 255, 255, 0.1));
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--text-accent) 24%, rgba(255, 255, 255, 0.12)),
+    rgba(255, 255, 255, 0.1)
+  );
 }
 
 .logout-btn:hover .login-btn__content {
-  background: linear-gradient(135deg, #d94c3d, #e55a50);
+  background: linear-gradient(135deg, var(--snake-hover-start), var(--snake-hover-end));
+  color: #fffdf8;
 }
 
 @keyframes loginSnakeBorder {

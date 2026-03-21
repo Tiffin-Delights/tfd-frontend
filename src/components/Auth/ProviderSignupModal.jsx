@@ -1,6 +1,7 @@
 import { useState } from "react";
 import "./LoginModal.css";
 import { loginUser, registerUser } from "../../api/client";
+import { validateProviderSignupForm } from "./authValidation";
 
 function ProviderSignupModal({ onBack, onClose, onSignupSuccess }) {
   const [form, setForm] = useState({
@@ -17,6 +18,9 @@ function ProviderSignupModal({ onBack, onClose, onSignupSuccess }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => {
+    if (error) {
+      setError("");
+    }
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
@@ -24,8 +28,9 @@ function ProviderSignupModal({ onBack, onClose, onSignupSuccess }) {
     e.preventDefault();
     setError("");
 
-    if (form.password !== form.confirmPassword) {
-      setError("Passwords do not match");
+    const validationError = validateProviderSignupForm(form);
+    if (validationError) {
+      setError(validationError);
       return;
     }
 
@@ -123,8 +128,12 @@ function ProviderSignupModal({ onBack, onClose, onSignupSuccess }) {
               value={form.phone}
               onChange={handleChange}
               autoComplete="tel"
+              inputMode="numeric"
+              pattern="[0-9]{10}"
+              maxLength={10}
               required
             />
+            <p className="form-hint">Use a valid 10-digit phone number.</p>
           </div>
 
           <div className="form-group">
@@ -163,8 +172,10 @@ function ProviderSignupModal({ onBack, onClose, onSignupSuccess }) {
               value={form.password}
               onChange={handleChange}
               autoComplete="new-password"
+              minLength={6}
               required
             />
+            <p className="form-hint">At least 6 characters with letters and numbers.</p>
           </div>
 
           <div className="form-group">
@@ -177,6 +188,7 @@ function ProviderSignupModal({ onBack, onClose, onSignupSuccess }) {
               value={form.confirmPassword}
               onChange={handleChange}
               autoComplete="new-password"
+              minLength={6}
               required
             />
           </div>

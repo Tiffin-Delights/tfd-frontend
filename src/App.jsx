@@ -49,10 +49,6 @@ function App() {
     setShowCustomerDashboard(false);
   };
 
-  const handleBackToHome = () => {
-    setShowProvidersPage(false);
-  };
-
   useEffect(() => {
     document.documentElement.dataset.theme = dietTheme;
     try {
@@ -86,9 +82,6 @@ function App() {
                   My Subscriptions
                 </button>
               )}
-              <button className="btn ghost" onClick={handleBackToHome}>
-                Logout
-              </button>
             </div>
             {showCustomerDashboard ? (
               <CustomerDashboard auth={auth} refreshKey={customerDashboardRefreshKey} />
