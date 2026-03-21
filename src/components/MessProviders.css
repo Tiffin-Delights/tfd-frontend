@@ -1,0 +1,203 @@
+.mess-providers {
+  min-height: calc(100vh - 90px);
+  padding: 102px 24px 56px;
+  background: var(--panel-shell-bg);
+}
+
+.provider-grid {
+  max-width: 1240px;
+  margin: 28px auto 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.provider-card {
+  background: var(--panel-card-bg);
+  border: 1px solid var(--panel-card-border);
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.provider-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-panel);
+}
+
+.provider-card h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: var(--text-accent);
+  font-size: 1.15rem;
+}
+
+.provider-card p {
+  margin: 7px 0;
+  color: var(--text-body);
+  flex-grow: 0;
+}
+
+.pricing-info {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--panel-card-border);
+  flex-grow: 1;
+}
+
+.pricing-info p {
+  margin: 6px 0;
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: var(--text-accent);
+}
+
+.pricing-info strong {
+  color: var(--text-body);
+  font-weight: 600;
+}
+
+.mess-providers .card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--panel-card-border);
+}
+
+.mess-providers .card-actions button {
+  flex: 1;
+  padding: 10px 12px;
+  font-size: 0.82rem;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mess-providers .card-actions button.primary {
+  background: linear-gradient(135deg, var(--snake-primary-start), var(--snake-primary-end));
+  color: #fffdf9;
+  box-shadow: 0 8px 16px color-mix(in srgb, var(--text-accent) 28%, transparent);
+}
+
+.mess-providers .card-actions button.primary:hover {
+  background: linear-gradient(135deg, var(--snake-hover-start), var(--snake-hover-end));
+  transform: translateY(-1px);
+}
+
+.mess-providers .card-actions button.secondary {
+  background: color-mix(in srgb, var(--text-accent) 7%, #ffffff);
+  color: var(--text-accent);
+  border: 1px solid color-mix(in srgb, var(--text-accent) 22%, transparent);
+}
+
+.mess-providers .card-actions button.secondary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--text-accent) 12%, #ffffff);
+  border-color: color-mix(in srgb, var(--text-accent) 34%, transparent);
+}
+
+.mess-providers .card-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.providers-state {
+  grid-column: 1 / -1;
+  margin: 4px 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--state-warn-text) 20%, transparent);
+  background: var(--state-warn-bg);
+  color: var(--state-warn-text);
+}
+
+.providers-state--error {
+  background: var(--state-danger-bg);
+  color: var(--state-danger-text);
+  border-color: color-mix(in srgb, var(--state-danger-text) 24%, transparent);
+}
+
+.menu-details {
+  max-width: 1240px;
+  margin: 24px auto 0;
+  background: var(--panel-card-bg);
+  border: 1px solid var(--panel-card-border);
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: var(--shadow-soft);
+}
+
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.menu-block {
+  background: color-mix(in srgb, var(--text-accent) 7%, #ffffff);
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--text-accent) 18%, transparent);
+  padding: 14px;
+}
+
+.menu-block h4 {
+  margin: 0 0 8px;
+  color: var(--text-accent);
+}
+
+.menu-block ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.menu-block li {
+  margin-bottom: 6px;
+  color: var(--text-body);
+}
+
+.back-btn {
+  margin-bottom: 10px;
+}
+
+.providers-page-header {
+  max-width: 1240px;
+  margin: 94px auto 0;
+  padding: 0 24px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.providers-page-header .btn.ghost {
+  border-color: color-mix(in srgb, var(--text-accent) 42%, transparent);
+  color: var(--text-accent);
+  background: color-mix(in srgb, var(--text-accent) 7%, #ffffff);
+}
+
+.providers-page-header .btn.ghost:hover {
+  border-color: var(--text-accent);
+  background: color-mix(in srgb, var(--text-accent) 14%, #ffffff);
+}
+
+@media (max-width: 768px) {
+  .mess-providers {
+    padding: 88px 14px 40px;
+  }
+
+  .providers-page-header {
+    margin-top: 86px;
+    padding: 0 14px;
+  }
+
+  .provider-grid,
+  .menu-details {
+    margin-top: 16px;
+  }
+}

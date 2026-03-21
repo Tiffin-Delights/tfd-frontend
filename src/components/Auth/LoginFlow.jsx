@@ -2,6 +2,8 @@ import { useState } from "react";
 import RoleSelectModal from "./RoleSelectModal";
 import CustomerLoginModal from "./CustomerLoginModal";
 import ProviderLoginModal from "./ProviderLoginModal";
+import CustomerSignupModal from "./CustomerSignupModal";
+import ProviderSignupModal from "./ProviderSignupModal";
 
 /**
  * LoginFlow
@@ -16,14 +18,14 @@ import ProviderLoginModal from "./ProviderLoginModal";
  *     {(openLogin) => <button onClick={openLogin}>Log In</button>}
  *   </LoginFlow>
  */
-function LoginFlow({ children }) {
-  // step: null | "select" | "customer" | "provider"
+function LoginFlow({ children, onCustomerLoginSuccess, onProviderLoginSuccess }) {
+  // step: null | "select" | "customer-login" | "provider-login" | "customer-signup" | "provider-signup"
   const [step, setStep] = useState(null);
 
   const open = () => setStep("select");
   const close = () => setStep(null);
 
-  const selectRole = (role) => setStep(role); // "customer" | "provider"
+  const selectRole = (role) => setStep(`${role}-login`);
   const goBack = () => setStep("select");
 
   return (
@@ -37,13 +39,41 @@ function LoginFlow({ children }) {
       )}
 
       {/* Step 2a – Customer Login */}
-      {step === "customer" && (
-        <CustomerLoginModal onBack={goBack} onClose={close} />
+      {step === "customer-login" && (
+        <CustomerLoginModal
+          onBack={goBack}
+          onClose={close}
+          onLoginSuccess={onCustomerLoginSuccess}
+          onSwitchToSignup={() => setStep("customer-signup")}
+        />
       )}
 
       {/* Step 2b – Provider Login */}
-      {step === "provider" && (
-        <ProviderLoginModal onBack={goBack} onClose={close} />
+      {step === "provider-login" && (
+        <ProviderLoginModal
+          onBack={goBack}
+          onClose={close}
+          onLoginSuccess={onProviderLoginSuccess}
+          onSwitchToSignup={() => setStep("provider-signup")}
+        />
+      )}
+
+      {/* Step 3a – Customer Signup */}
+      {step === "customer-signup" && (
+        <CustomerSignupModal
+          onBack={() => setStep("customer-login")}
+          onClose={close}
+          onSignupSuccess={onCustomerLoginSuccess}
+        />
+      )}
+
+      {/* Step 3b – Provider Signup */}
+      {step === "provider-signup" && (
+        <ProviderSignupModal
+          onBack={() => setStep("provider-login")}
+          onClose={close}
+          onSignupSuccess={onProviderLoginSuccess}
+        />
       )}
     </>
   );

@@ -1,26 +1,48 @@
 import { useState } from "react";
 import "./LoginModal.css";
+import { loginUser } from "../../api/client";
+import { validateLoginForm } from "./authValidation";
 
-// Placeholder destination for provider dashboard
-const PROVIDER_PORTAL_URL = "https://provider.tiffindelight.com";
-
-function ProviderLoginModal({ onBack, onClose }) {
-  const [form, setForm] = useState({
-    businessName: "",
-    providerId: "",
-    email: "",
-    password: "",
-  });
+function ProviderLoginModal({ onBack, onClose, onLoginSuccess, onSwitchToSignup }) {
+  const [form, setForm] = useState({ email: "", password: "" });
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => {
+    if (error) {
+      setError("");
+    }
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Placeholder action: open the provider portal in a new tab
-    window.open(PROVIDER_PORTAL_URL, "_blank", "noopener,noreferrer");
-    onClose();
+    setError("");
+
+    const validationError = validateLoginForm(form);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const result = await loginUser(form.email, form.password);
+      if (result?.user?.role !== "provider" && result?.user?.role !== "admin") {
+        setError("This account is not a provider/admin account.");
+        return;
+      }
+
+      if (onLoginSuccess) {
+        onLoginSuccess(result);
+      }
+      onClose();
+    } catch (err) {
+      setError(err.message || "Login failed. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -41,34 +63,6 @@ function ProviderLoginModal({ onBack, onClose }) {
         </p>
 
         <form className="modal-form" onSubmit={handleSubmit} noValidate>
-          <div className="form-group">
-            <label htmlFor="prov-business">Business Name</label>
-            <input
-              id="prov-business"
-              name="businessName"
-              type="text"
-              placeholder="e.g. Sharma Tiffin Services"
-              value={form.businessName}
-              onChange={handleChange}
-              autoComplete="organization"
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="prov-id">Provider ID</label>
-            <input
-              id="prov-id"
-              name="providerId"
-              type="text"
-              placeholder="e.g. TFD-2024-00123"
-              value={form.providerId}
-              onChange={handleChange}
-              autoComplete="off"
-              required
-            />
-          </div>
-
           <div className="form-group">
             <label htmlFor="prov-email">Email Address</label>
             <input
@@ -93,18 +87,25 @@ function ProviderLoginModal({ onBack, onClose }) {
               value={form.password}
               onChange={handleChange}
               autoComplete="current-password"
+              minLength={6}
               required
             />
+            <p className="form-hint">Password must be at least 6 characters.</p>
           </div>
 
-          <button type="submit" className="modal-submit">
-            Log In to Provider Dashboard
+          {error && <p className="modal-error">{error}</p>}
+
+          <button type="submit" className="modal-submit" disabled={isSubmitting}>
+            {isSubmitting ? "Logging in..." : "Log In to Provider Dashboard"}
           </button>
         </form>
 
         <hr className="modal-divider" />
         <p className="modal-footnote">
-          New provider? Register on the provider portal.
+          New provider?{" "}
+          <button type="button" className="modal-link" onClick={onSwitchToSignup}>
+            Create provider account
+          </button>
         </p>
       </div>
     </div>

@@ -1,0 +1,188 @@
+@import "./ModalsCommon.css";
+
+.pricing-modal {
+  max-width: 500px;
+}
+
+.pricing-info {
+  background: var(--panel-muted-bg);
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  font-size: 0.95rem;
+  color: var(--text-body);
+  border-left: 4px solid var(--text-accent);
+}
+
+.pricing-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--text-strong);
+  font-size: 0.95rem;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.currency-symbol {
+  position: absolute;
+  left: 12px;
+  font-weight: 600;
+  color: var(--text-accent);
+  font-size: 1.1rem;
+  pointer-events: none;
+}
+
+.input-wrapper input {
+  width: 100%;
+  padding: 12px 12px 12px 32px;
+  border: 1px solid var(--panel-card-border);
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: border-color 0.2s;
+  color: var(--text-body);
+  background: color-mix(in srgb, var(--text-accent) 4%, #ffffff);
+}
+
+.input-wrapper input:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--text-accent) 45%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--text-accent) 16%, transparent);
+}
+
+.form-group small {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+.pricing-summary {
+  background: color-mix(in srgb, var(--text-accent) 6%, #ffffff);
+  border: 1px solid color-mix(in srgb, var(--text-accent) 20%, transparent);
+  border-radius: 12px;
+  padding: 15px;
+  margin: 10px 0;
+}
+
+.pricing-summary h4 {
+  margin: 0 0 12px;
+  color: var(--text-accent);
+  font-size: 0.95rem;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  font-size: 0.9rem;
+  color: var(--text-body);
+  border-bottom: 1px solid color-mix(in srgb, var(--text-accent) 20%, transparent);
+}
+
+.summary-row:last-child {
+  border-bottom: none;
+}
+
+.summary-row .price {
+  font-weight: 600;
+  color: var(--text-accent);
+  font-size: 1rem;
+}
+
+.summary-row.discount {
+  background: color-mix(in srgb, var(--text-accent) 5%, #ffffff);
+  margin: 8px -15px -15px;
+  padding: 12px 15px;
+  border-radius: 0 0 12px 12px;
+  border-top: 2px dashed color-mix(in srgb, var(--text-accent) 40%, var(--btn-primary-bg));
+}
+
+.summary-row.discount .value {
+  color: var(--text-strong);
+  font-weight: 700;
+}
+
+.submit-btn {
+  padding: 12px 20px;
+  background: linear-gradient(135deg, var(--snake-primary-start), var(--snake-primary-end));
+  color: #fffdf8;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  margin-top: 10px;
+}
+
+.submit-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--text-accent) 30%, transparent);
+}
+
+.submit-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.loading-message {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-muted);
+  font-size: 1rem;
+}
+
+.success-message {
+  background: var(--state-success-bg);
+  color: var(--state-success-text);
+  padding: 16px;
+  border-radius: 10px;
+  margin-bottom: 15px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 1rem;
+  border-left: 4px solid var(--state-success-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  animation: slideDown 0.3s ease-out;
+}
+
+.error-message {
+  background: var(--state-danger-bg);
+  color: var(--state-danger-text);
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--state-danger-text) 24%, transparent);
+  margin-bottom: 15px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

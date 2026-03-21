@@ -2,6 +2,11 @@
 
 This repository contains a simple React/Vite frontend that demonstrates a marketing-style landing page using a warm, earthy color palette.
 
+## Setup Guides
+
+- Frontend detailed setup: `FRONTEND_SETUP.md`
+- Backend detailed setup: `backend/BACKEND_SETUP.md`
+
 ## 🚀 Getting Started (for beginners)
 
 This section walks through every step required to get the project up and running on a fresh machine. Don’t worry if you’re new to Git, Node, or npm — just follow the commands in order.
@@ -129,3 +134,25 @@ src/
 ---
 
 Feel free to open issues or modify as needed. Happy hacking! 🎉
+
+## Backend (FastAPI + PostgreSQL)
+
+Backend code is available in [backend](backend).
+
+### Quick start
+
+1. Move to backend:
+  - `cd backend`
+2. Create and activate virtualenv.
+3. Install dependencies:
+  - `pip install -r requirements.txt`
+4. Set env values in `.env` (or copy from `.env.example`):
+  - `DATABASE_URL=postgresql://postgres:postgres@localhost:5432/tiffin`
+5. Run server:
+  - `uvicorn app.main:app --reload --port 8000`
+
+### Frontend API base URL
+
+Set this in frontend `.env` if needed:
+
+- `VITE_API_BASE_URL=http://127.0.0.1:8000/api/v1`

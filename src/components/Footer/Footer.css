@@ -1,22 +1,27 @@
 .footer {
-  background: linear-gradient(135deg, #f5f0e4 0%, #ede6d8 100%);
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--footer-bg);
   color: #1f1f1f;
-  padding: 60px 24px 20px;
-  margin-top: 80px;
+  padding: 38px 20px 22px;
   width: 100%;
   box-sizing: border-box;
-  border-top: 3px solid #134222;
-  box-shadow: 0 -4px 20px rgba(19, 66, 34, 0.15);
-  position: relative;
+  border-top: 1px solid var(--footer-border);
+  box-shadow:
+    0 -18px 42px rgba(113, 69, 23, 0.08),
+    0 0 0 1px var(--surface-border) inset;
 }
 
 .footer-container {
-  max-width: 1200px;
+  max-width: 1180px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1.5fr;
-  gap: 40px;
-  padding: 0 24px;
+  grid-template-columns: 1.15fr 0.8fr 1fr;
+  gap: 32px;
+  padding: 0 16px;
+  align-items: start;
 }
 
 .footer-section {
@@ -30,10 +35,10 @@
 }
 
 .footer-title {
-  font-size: 1.8rem;
+  font-size: 1.7rem;
   font-weight: 800;
-  margin-bottom: 5px;
-  color: #134222;
+  margin-bottom: 4px;
+  color: var(--text-strong);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -41,26 +46,37 @@
 
 .footer-tagline {
   font-size: 1rem;
-  font-weight: 600;
-  color: #b43a0a ;
+  font-weight: 700;
+  background: linear-gradient(135deg, #f2c94c, #f28c28, #b43a0a);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
   margin: 0 0 15px 0;
   font-style: italic;
 }
 
+:root[data-theme="veg"] .footer-tagline {
+  background: linear-gradient(135deg, #f0d94f, #3fa35b, #9edb67);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
 .footer-description {
-  font-size: 0.9rem;
-  line-height: 1.6;
-  color: #555;
+  font-size: 0.98rem;
+  line-height: 1.7;
+  color: var(--text-body);
   margin: 0;
+  max-width: 320px;
 }
 
 /* Section Headers */
 .footer-subtitle {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 700;
-  margin-bottom: 20px;
-  color: #134222;
-  border-bottom: 2px solid #ffb53e;
+  margin-bottom: 18px;
+  color: var(--text-strong);
+  border-bottom: 2px solid var(--btn-primary-bg);
   padding-bottom: 8px;
   display: inline-block;
 }
@@ -83,15 +99,36 @@
 
 .footer-links a {
   text-decoration: none;
-  color: #555;
-  font-size: 0.9rem;
+  color: var(--text-body);
+  font-size: 0.95rem;
   transition: all 0.3s ease;
   display: inline-block;
 }
 
 .footer-links a:hover {
-  color: #134222;
+  color: var(--text-strong);
   font-weight: 600;
+}
+
+.footer-contact {
+  display: grid;
+  gap: 8px;
+}
+
+.footer-contact p {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--text-body);
+}
+
+.footer-contact a {
+  color: var(--text-strong);
+  text-decoration: none;
+}
+
+.footer-contact a:hover {
+  text-decoration: underline;
 }
 
 /* Contact Info Special Styling */
@@ -106,49 +143,64 @@
   margin-top: 20px;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
 }
 
 .footer-social span {
-  font-size: 0.85rem;
-  color: #134222;
-  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-strong);
+  font-weight: 700;
 }
 
 .footer-social a {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   text-decoration: none;
   padding: 8px;
   border-radius: 50%;
-  background: rgba(19, 66, 34, 0.1);
+  background: color-mix(in srgb, var(--text-strong) 12%, transparent);
   transition: all 0.3s ease;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .footer-social a:hover {
-  background: #134222;
+  background: var(--text-strong);
   transform: scale(1.1);
 }
 
 /* Copyright Section */
 .footer-bottom {
   text-align: center;
-  padding-top: 30px;
-  margin-top: 40px;
-  border-top: 2px solid rgba(19, 66, 34, 0.2);
-  font-size: 0.85rem;
+  padding-top: 18px;
+  margin-top: 28px;
+  border-top: 1px solid rgba(19, 66, 34, 0.14);
+  font-size: 0.9rem;
   color: #666;
+}
+
+.quick-links {
+  width: fit-content;
+}
+
+.footer-contact-section {
+  max-width: 280px;
 }
 
 /* Responsive Design */
 @media (max-width: 1000px) {
   .footer-container {
-    grid-template-columns: 1fr 1fr;
-    gap: 30px;
+    grid-template-columns: 1fr 0.9fr 1fr;
+    gap: 24px;
   }
 }
 
 @media (max-width: 600px) {
   .footer {
+    position: static;
     padding: 40px 16px 20px;
   }
   
