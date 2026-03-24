@@ -49,6 +49,21 @@ function App() {
     setShowCustomerDashboard(false);
   };
 
+  const handleAuthUserUpdate = (nextUser) => {
+    setAuth((current) => {
+      if (!current?.token) {
+        return current;
+      }
+
+      const nextAuth = {
+        ...current,
+        user: nextUser,
+      };
+      localStorage.setItem("tfd_auth", JSON.stringify(nextAuth));
+      return nextAuth;
+    });
+  };
+
   useEffect(() => {
     document.documentElement.dataset.theme = dietTheme;
     try {
@@ -69,7 +84,7 @@ function App() {
       />
       <main className="page">
         {auth?.user?.role === "provider" ? (
-          <ProviderDashboard auth={auth} />
+          <ProviderDashboard auth={auth} onAuthUserUpdate={handleAuthUserUpdate} />
         ) : auth?.token ? (
           <>
             <div className="providers-page-header">
@@ -88,6 +103,8 @@ function App() {
             ) : (
               <MessProviders
                 auth={auth}
+                dietTheme={dietTheme}
+                onAuthUserUpdate={handleAuthUserUpdate}
                 onSubscriptionCreated={() => {
                   setCustomerDashboardRefreshKey((prev) => prev + 1);
                   setShowCustomerDashboard(true);

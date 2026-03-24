@@ -71,10 +71,6 @@ export function validateCustomerSignupForm(form) {
     return "Phone number must be exactly 10 digits.";
   }
 
-  if (isBlank(form.delivery_address)) {
-    return "Delivery address is required.";
-  }
-
   const passwordError = validatePassword(form.password);
   if (passwordError) {
     return passwordError;
@@ -122,6 +118,19 @@ export function validateProviderSignupForm(form) {
 
   if (isBlank(form.city)) {
     return "City is required.";
+  }
+
+  if (isBlank(form.serviceAddressText) || !form.servicePlaceId) {
+    return "Please choose the provider service address from the location suggestions.";
+  }
+
+  if (form.serviceLatitude == null || form.serviceLongitude == null) {
+    return "Provider coordinates are missing. Please choose the service address again.";
+  }
+
+  const radius = Number(form.serviceRadiusKm);
+  if (!Number.isFinite(radius) || radius <= 0) {
+    return "Please enter a valid delivery radius in kilometers.";
   }
 
   const passwordError = validatePassword(form.password);

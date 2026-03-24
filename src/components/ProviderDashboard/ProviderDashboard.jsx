@@ -5,6 +5,7 @@ import SubscribersModal from "./SubscribersModal";
 import FeedbackModal from "./FeedbackModal";
 import MenuUploadModal from "./MenuUploadModal";
 import SubscriptionPricingModal from "./SubscriptionPricingModal";
+import ProviderLocationModal from "./ProviderLocationModal";
 import "./ProviderDashboard.css";
 
 function ProviderDashboard({ auth }) {
@@ -26,7 +27,6 @@ function ProviderDashboard({ auth }) {
     const hasExistingProfile = Boolean(profileDataRef.current);
 
     try {
-      // Show full-screen loading only for the very first load.
       if (!background && !hasExistingProfile) {
         setLoading(true);
       }
@@ -100,13 +100,11 @@ function ProviderDashboard({ auth }) {
   return (
     <div className="provider-dashboard">
       <div className="dashboard-container">
-        {/* Header Section */}
         <div className="dashboard-header">
           <h1 className="dashboard-title">Provider Dashboard</h1>
           <p className="provider-name">{profileData.mess_name}</p>
         </div>
 
-        {/* Provider Info Card */}
         <div className="provider-info-card">
           <div className="info-section">
             <h3>Business Information</h3>
@@ -128,6 +126,14 @@ function ProviderDashboard({ auth }) {
                 <p>{profileData.contact}</p>
               </div>
               <div className="info-item">
+                <label>Service Address</label>
+                <p>{profileData.service_address_text || "Not set yet"}</p>
+              </div>
+              <div className="info-item">
+                <label>Delivery Radius</label>
+                <p>{profileData.service_radius_km ? `${profileData.service_radius_km} km` : "Not set yet"}</p>
+              </div>
+              <div className="info-item">
                 <label>Email</label>
                 <p>{auth?.user?.email}</p>
               </div>
@@ -139,7 +145,6 @@ function ProviderDashboard({ auth }) {
           </div>
         </div>
 
-        {/* Stats Cards */}
         <div className="stats-container">
           <div className="stat-card">
             <div className="stat-number">{active_customers}</div>
@@ -160,10 +165,10 @@ function ProviderDashboard({ auth }) {
           </div>
         </div>
 
-        {/* Quick Actions */}
         <div className="quick-actions">
           <h3>Quick Actions</h3>
           <div className="actions-grid">
+            <button className="action-btn primary" onClick={() => setActiveModal("coverage")}>Set Delivery Area</button>
             <button className="action-btn primary" onClick={() => setActiveModal("menu")}>Upload Menu Items</button>
             <button className="action-btn primary" onClick={() => setActiveModal("pricing")}>💰 Set Pricing</button>
             <button className="action-btn secondary" onClick={() => setActiveModal("orders")}>View Orders</button>
@@ -172,7 +177,6 @@ function ProviderDashboard({ auth }) {
           </div>
         </div>
 
-        {/* Recent Activity */}
         <div className="recent-activity">
           <h3>Service Overview</h3>
           <div className="activity-content">
@@ -185,41 +189,52 @@ function ProviderDashboard({ auth }) {
             <p>
               Your menu currently has <strong>{menu_items_count}</strong> items.
             </p>
+            <p>
+              Delivery coverage: <strong>{profileData.service_radius_km ? `${profileData.service_radius_km} km` : "not configured"}</strong>
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Modals */}
-      <OrdersModal 
-        auth={auth} 
-        isOpen={activeModal === "orders"} 
-        onClose={() => setActiveModal(null)} 
+      <OrdersModal
+        auth={auth}
+        isOpen={activeModal === "orders"}
+        onClose={() => setActiveModal(null)}
       />
-      <SubscribersModal 
-        auth={auth} 
-        isOpen={activeModal === "subscribers"} 
-        onClose={() => setActiveModal(null)} 
+      <SubscribersModal
+        auth={auth}
+        isOpen={activeModal === "subscribers"}
+        onClose={() => setActiveModal(null)}
       />
-      <FeedbackModal 
-        auth={auth} 
-        isOpen={activeModal === "feedback"} 
-        onClose={() => setActiveModal(null)} 
+      <FeedbackModal
+        auth={auth}
+        isOpen={activeModal === "feedback"}
+        onClose={() => setActiveModal(null)}
       />
-      <MenuUploadModal 
-        auth={auth} 
+      <MenuUploadModal
+        auth={auth}
         providerId={profileData?.provider_id}
-        isOpen={activeModal === "menu"} 
+        isOpen={activeModal === "menu"}
         onClose={() => setActiveModal(null)}
         onUploadSuccess={() => setActiveModal(null)}
       />
-      <SubscriptionPricingModal 
-        auth={auth} 
-        isOpen={activeModal === "pricing"} 
+      <SubscriptionPricingModal
+        auth={auth}
+        isOpen={activeModal === "pricing"}
         onClose={() => setActiveModal(null)}
         onUpdateSuccess={() => setActiveModal(null)}
         onPricingUpdated={(newPricing) => {
-          // Pricing was updated, any component listening can refresh
-          window.dispatchEvent(new CustomEvent('pricingUpdated', { detail: newPricing }));
+          window.dispatchEvent(new CustomEvent("pricingUpdated", { detail: newPricing }));
+        }}
+      />
+      <ProviderLocationModal
+        auth={auth}
+        profileData={profileData}
+        isOpen={activeModal === "coverage"}
+        onClose={() => setActiveModal(null)}
+        onUpdateSuccess={() => {
+          setActiveModal(null);
+          fetchProviderProfile({ background: true });
         }}
       />
     </div>

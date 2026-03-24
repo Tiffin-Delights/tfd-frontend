@@ -46,7 +46,6 @@ class DayOfWeek(str, Enum):
 
 class OrderType(str, Enum):
     subscription = "subscription"
-    # TODO: v2.0 - Remove one-time after subscription MVP is stable; MVP is subscription-only
     one_time = "one-time"
 
 
@@ -78,6 +77,10 @@ class User(Base):
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     role: Mapped[UserRole] = mapped_column(SqlEnum(UserRole), nullable=False, index=True)
     location: Mapped[str | None] = mapped_column(String(120), nullable=True, index=True)
+    location_text: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    place_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    current_latitude: Mapped[Decimal | None] = mapped_column(Numeric(9, 6), nullable=True)
+    current_longitude: Mapped[Decimal | None] = mapped_column(Numeric(9, 6), nullable=True)
     delivery_address: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
@@ -102,6 +105,11 @@ class Provider(Base):
     mess_name: Mapped[str] = mapped_column(String(180), nullable=False, index=True)
     city: Mapped[str] = mapped_column(String(120), nullable=False, index=True)
     contact: Mapped[str] = mapped_column(String(20), nullable=False)
+    service_address_text: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    service_place_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    service_latitude: Mapped[Decimal | None] = mapped_column(Numeric(9, 6), nullable=True)
+    service_longitude: Mapped[Decimal | None] = mapped_column(Numeric(9, 6), nullable=True)
+    service_radius_km: Mapped[Decimal | None] = mapped_column(Numeric(6, 2), nullable=True)
     rating: Mapped[Decimal] = mapped_column(Numeric(2, 1), nullable=False, server_default="0")
     weekly_price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False, server_default="899")
     monthly_price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False, server_default="3299")
@@ -224,3 +232,5 @@ class Feedback(Base):
 Index("idx_orders_user_provider", Order.user_id, Order.provider_id)
 Index("idx_subscriptions_user_provider", Subscription.user_id, Subscription.provider_id)
 Index("idx_users_role_location", User.role, User.location)
+Index("idx_users_geo_coords", User.current_latitude, User.current_longitude)
+Index("idx_providers_geo_coords", Provider.service_latitude, Provider.service_longitude)
