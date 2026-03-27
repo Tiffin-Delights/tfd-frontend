@@ -146,10 +146,13 @@ Backend code is available in [backend](backend).
 2. Create and activate virtualenv.
 3. Install dependencies:
   - `pip install -r requirements.txt`
-4. Set env values in `.env` (or copy from `.env.example`):
-  - `DATABASE_URL=postgresql://postgres:postgres@localhost:5432/tiffin`
+4. Copy `backend/.env.sample` to `backend/.env`
 5. Run server:
   - `uvicorn app.main:app --reload --port 8000`
+
+The backend reads PostgreSQL credentials from each developer's own ignored `backend/.env`. On startup it will try to create the target database automatically if it does not exist yet, then create the tables automatically.
+
+This repo disables Python bytecode generation during local runs, so `__pycache__` and `.pyc` files should not be created.
 
 ### Frontend API base URL
 

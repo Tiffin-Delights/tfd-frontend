@@ -1,14 +1,20 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-from app.db import Base, engine
 from app.routers import auth, feedback, menu, orders, payments, providers, subscriptions, users
+from app.db import init_db
 
 
-Base.metadata.create_all(bind=engine)
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    init_db()
+    yield
 
-app = FastAPI(title=settings.app_name)
+
+app = FastAPI(title=settings.app_name, lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
