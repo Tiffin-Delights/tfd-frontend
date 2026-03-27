@@ -29,17 +29,29 @@ def register(payload: UserRegisterRequest, db: Session = Depends(get_db)):
         phone=payload.phone,
         password_hash=hash_password(payload.password),
         role=payload.role,
-        location=payload.location,
+        location=(payload.location or payload.location_text or "")[:120] or None,
+        location_text=payload.location_text or payload.location,
+        place_id=payload.place_id,
+        current_latitude=payload.current_latitude,
+        current_longitude=payload.current_longitude,
         delivery_address=payload.delivery_address,
     )
     db.add(user)
     db.flush()
 
     if payload.role == UserRole.provider:
-        if not payload.mess_name or not payload.city:
+        if (
+            not payload.mess_name
+            or not payload.city
+            or not payload.service_address_text
+            or not payload.service_place_id
+            or payload.service_latitude is None
+            or payload.service_longitude is None
+            or payload.service_radius_km is None
+        ):
             raise HTTPException(
                 status_code=400,
-                detail="Provider registration requires mess_name and city",
+                detail="Provider registration requires service location and delivery radius",
             )
 
         provider_profile = Provider(
@@ -48,6 +60,11 @@ def register(payload: UserRegisterRequest, db: Session = Depends(get_db)):
             mess_name=payload.mess_name,
             city=payload.city,
             contact=payload.contact or payload.phone,
+            service_address_text=payload.service_address_text,
+            service_place_id=payload.service_place_id,
+            service_latitude=payload.service_latitude,
+            service_longitude=payload.service_longitude,
+            service_radius_km=payload.service_radius_km,
         )
         db.add(provider_profile)
 

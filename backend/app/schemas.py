@@ -22,10 +22,19 @@ class UserRegisterRequest(BaseModel):
     password: str = Field(min_length=6, max_length=128)
     role: UserRole = UserRole.customer
     location: str | None = Field(default=None, max_length=120)
+    location_text: str | None = Field(default=None, max_length=255)
+    place_id: str | None = Field(default=None, max_length=255)
+    current_latitude: Decimal | None = Field(default=None, ge=-90, le=90)
+    current_longitude: Decimal | None = Field(default=None, ge=-180, le=180)
     delivery_address: str | None = Field(default=None, min_length=8, max_length=500)
     mess_name: str | None = Field(default=None, min_length=2, max_length=180)
     city: str | None = Field(default=None, min_length=2, max_length=120)
     contact: str | None = Field(default=None, min_length=8, max_length=20)
+    service_address_text: str | None = Field(default=None, min_length=5, max_length=255)
+    service_place_id: str | None = Field(default=None, min_length=3, max_length=255)
+    service_latitude: Decimal | None = Field(default=None, ge=-90, le=90)
+    service_longitude: Decimal | None = Field(default=None, ge=-180, le=180)
+    service_radius_km: Decimal | None = Field(default=None, gt=0, le=100)
 
 
 class UserResponse(BaseModel):
@@ -38,6 +47,10 @@ class UserResponse(BaseModel):
     phone: str | None
     role: UserRole
     location: str | None
+    location_text: str | None
+    place_id: str | None
+    current_latitude: Decimal | None
+    current_longitude: Decimal | None
     delivery_address: str | None
 
 
@@ -57,6 +70,11 @@ class ProviderCreateRequest(BaseModel):
     mess_name: str = Field(min_length=2, max_length=180)
     city: str = Field(min_length=2, max_length=120)
     contact: str = Field(min_length=8, max_length=20)
+    service_address_text: str = Field(min_length=5, max_length=255)
+    service_place_id: str = Field(min_length=3, max_length=255)
+    service_latitude: Decimal = Field(ge=-90, le=90)
+    service_longitude: Decimal = Field(ge=-180, le=180)
+    service_radius_km: Decimal = Field(gt=0, le=100)
 
 
 class ProviderResponse(BaseModel):
@@ -68,9 +86,15 @@ class ProviderResponse(BaseModel):
     mess_name: str
     city: str
     contact: str
+    service_address_text: str | None = None
+    service_place_id: str | None = None
+    service_latitude: Decimal | None = None
+    service_longitude: Decimal | None = None
+    service_radius_km: Decimal | None = None
     rating: Decimal
     weekly_price: Decimal
     monthly_price: Decimal
+    distance_km: Decimal | None = None
 
 
 class ProviderPricingResponse(BaseModel):
@@ -84,6 +108,23 @@ class ProviderPricingResponse(BaseModel):
 class ProviderPricingUpdateRequest(BaseModel):
     weekly_price: Decimal = Field(gt=0)
     monthly_price: Decimal = Field(gt=0)
+
+
+class UserLocationUpdateRequest(BaseModel):
+    location_text: str = Field(min_length=3, max_length=255)
+    place_id: str | None = Field(default=None, max_length=255)
+    current_latitude: Decimal = Field(ge=-90, le=90)
+    current_longitude: Decimal = Field(ge=-180, le=180)
+    delivery_address: str | None = Field(default=None, min_length=8, max_length=500)
+
+
+class ProviderLocationUpdateRequest(BaseModel):
+    city: str = Field(min_length=2, max_length=120)
+    service_address_text: str = Field(min_length=5, max_length=255)
+    service_place_id: str = Field(min_length=3, max_length=255)
+    service_latitude: Decimal = Field(ge=-90, le=90)
+    service_longitude: Decimal = Field(ge=-180, le=180)
+    service_radius_km: Decimal = Field(gt=0, le=100)
 
 
 class MenuUploadRequest(BaseModel):
@@ -105,16 +146,10 @@ class MenuItemResponse(BaseModel):
 
     @property
     def id(self):
-        """Alias for menu_id for frontend compatibility"""
         return self.menu_id
 
 
 class OrderCreateRequest(BaseModel):
-    """Create a subscription order (subscription-only; one-time orders not supported).
-    
-    Note: This MVP accepts only order_type='subscription'. All transactions are subscription-based.
-    Use /subscriptions/manage endpoint to create subscriptions with pricing and plan details.
-    """
     provider_id: int
     order_type: OrderType
     start_date: date

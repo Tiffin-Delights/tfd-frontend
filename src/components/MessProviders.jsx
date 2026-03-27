@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import "./MessProviders.css";
-import { getProviderMenu, listProviders } from "../api/client";
+import { getProviderMenu, listProviders, updateUserLocation } from "../api/client";
 import SubscribeModal from "./MessProviders/SubscribeModal";
+import LocationPicker from "./Location/LocationPicker";
 
 function MenuList({ title, items }) {
   return (
@@ -16,7 +17,7 @@ function MenuList({ title, items }) {
   );
 }
 
-function MessProviders({ auth, onSubscriptionCreated }) {
+function MessProviders({ auth, onSubscriptionCreated, onAuthUserUpdate, dietTheme = "nonveg" }) {
   const [selectedProvider, setSelectedProvider] = useState(null);
   const [providers, setProviders] = useState([]);
   const [menuItems, setMenuItems] = useState([]);
@@ -26,6 +27,14 @@ function MessProviders({ auth, onSubscriptionCreated }) {
   const [menuError, setMenuError] = useState("");
   const [subscribeModal, setSubscribeModal] = useState(false);
   const [selectedForSubscribe, setSelectedForSubscribe] = useState(null);
+  const [locationDraft, setLocationDraft] = useState(() => ({
+    label: auth?.user?.location_text || auth?.user?.location || "",
+    latitude: auth?.user?.current_latitude != null ? Number(auth.user.current_latitude) : null,
+    longitude: auth?.user?.current_longitude != null ? Number(auth.user.current_longitude) : null,
+    placeId: auth?.user?.place_id || "",
+  }));
+  const [locationSaving, setLocationSaving] = useState(false);
+  const [locationError, setLocationError] = useState("");
 
   const loadProviders = useCallback(async () => {
     if (!auth?.token) {
@@ -35,14 +44,21 @@ function MessProviders({ auth, onSubscriptionCreated }) {
     setProvidersLoading(true);
     setProvidersError("");
     try {
-      const data = await listProviders(auth.token);
+      const customerLocation =
+        auth?.user?.current_latitude != null && auth?.user?.current_longitude != null
+          ? {
+              latitude: Number(auth.user.current_latitude),
+              longitude: Number(auth.user.current_longitude),
+            }
+          : null;
+      const data = await listProviders(auth.token, undefined, dietTheme, customerLocation);
       setProviders(Array.isArray(data) ? data : []);
     } catch (error) {
       setProvidersError(error?.message || "Unable to load providers");
     } finally {
       setProvidersLoading(false);
     }
-  }, [auth?.token]);
+  }, [auth?.token, auth?.user?.current_latitude, auth?.user?.current_longitude, dietTheme]);
 
   useEffect(() => {
     if (!auth?.token) {
@@ -51,7 +67,11 @@ function MessProviders({ auth, onSubscriptionCreated }) {
       return;
     }
 
-    loadProviders();
+    if (auth?.user?.current_latitude != null && auth?.user?.current_longitude != null) {
+      loadProviders();
+    } else {
+      setProviders([]);
+    }
 
     const handlePricingUpdated = () => loadProviders();
     const handleWindowFocus = () => loadProviders();
@@ -62,7 +82,28 @@ function MessProviders({ auth, onSubscriptionCreated }) {
       window.removeEventListener("pricingUpdated", handlePricingUpdated);
       window.removeEventListener("focus", handleWindowFocus);
     };
-  }, [auth?.token, loadProviders]);
+  }, [auth?.token, auth?.user?.current_latitude, auth?.user?.current_longitude, loadProviders]);
+
+  useEffect(() => {
+    setLocationDraft({
+      label: auth?.user?.location_text || auth?.user?.location || "",
+      latitude: auth?.user?.current_latitude != null ? Number(auth.user.current_latitude) : null,
+      longitude: auth?.user?.current_longitude != null ? Number(auth.user.current_longitude) : null,
+      placeId: auth?.user?.place_id || "",
+    });
+  }, [auth?.user?.current_latitude, auth?.user?.current_longitude, auth?.user?.location, auth?.user?.location_text, auth?.user?.place_id]);
+
+  useEffect(() => {
+    if (dietTheme !== "veg") {
+      return;
+    }
+
+    if (selectedProvider && !providers.some((provider) => provider.provider_id === selectedProvider.provider_id)) {
+      setSelectedProvider(null);
+      setMenuItems([]);
+      setMenuError("");
+    }
+  }, [dietTheme, providers, selectedProvider]);
 
   useEffect(() => {
     if (!selectedProvider || !auth?.token) {
@@ -107,22 +148,89 @@ function MessProviders({ auth, onSubscriptionCreated }) {
     return grouped;
   }, [menuItems]);
 
+  const hasSavedLocation =
+    auth?.user?.current_latitude != null && auth?.user?.current_longitude != null;
+
+  const handleLocationSave = async () => {
+    if (!locationDraft.label || locationDraft.latitude == null || locationDraft.longitude == null) {
+      setLocationError("Choose a suggested location or use your current location before applying.");
+      return;
+    }
+
+    setLocationSaving(true);
+    setLocationError("");
+    try {
+      const updatedUser = await updateUserLocation(auth.token, {
+        location_text: locationDraft.label,
+        place_id: locationDraft.placeId || null,
+        current_latitude: locationDraft.latitude,
+        current_longitude: locationDraft.longitude,
+      });
+      onAuthUserUpdate?.(updatedUser);
+    } catch (error) {
+      setLocationError(error?.message || "Unable to save your location.");
+    } finally {
+      setLocationSaving(false);
+    }
+  };
+
   return (
     <section className="mess-providers" id="mess-providers">
       <div className="section-head">
         <p className="eyebrow">Mess Providers</p>
         <h2>Choose Your Mess</h2>
         <p className="lede">
-          Click on Details to see the full menu of any mess provider.
+          {dietTheme === "veg"
+            ? "Veg mode is on, so suggestions only show providers that appear to offer vegetarian meals."
+            : "Click on Details to see the full menu of any mess provider."}
         </p>
+      </div>
+
+      <div className="providers-controls">
+        <div className="location-panel">
+          <div>
+            <p className="location-panel__eyebrow">Delivery Location</p>
+            <h3>Share your location to see nearby tiffin services</h3>
+            <p className="location-panel__copy">
+              Use live location or search manually. We only show providers whose delivery radius covers your spot.
+            </p>
+          </div>
+          <div className="location-panel__picker">
+            <LocationPicker
+              label="Your location"
+              placeholder="Search your address, locality, or landmark"
+              value={locationDraft}
+              onSelect={(location) => {
+                setLocationError("");
+                setLocationDraft(location);
+              }}
+              onError={setLocationError}
+              allowCurrentLocation
+            />
+            <button className="btn primary location-panel__save" onClick={handleLocationSave} disabled={locationSaving}>
+              {locationSaving ? "Saving..." : hasSavedLocation ? "Update Location" : "Apply Location"}
+            </button>
+            {locationError && <p className="providers-state providers-state--error">{locationError}</p>}
+            {hasSavedLocation && (
+              <p className="location-panel__saved">
+                Showing providers near <strong>{auth?.user?.location_text || auth?.user?.location}</strong>
+              </p>
+            )}
+          </div>
+        </div>
       </div>
 
       {!selectedProvider && (
         <div className="provider-grid">
+          {!hasSavedLocation && (
+            <p className="providers-state">
+              Set your location first to discover providers that can deliver to you.
+            </p>
+          )}
           {providersLoading && <p className="providers-state">Loading providers...</p>}
           {!providersLoading && providersError && <p className="providers-state providers-state--error">{providersError}</p>}
-          {!providersLoading && !providersError && providers.length === 0 && (
-            <p className="providers-state">No providers found in database.</p>
+          {!providersLoading && !providersError && hasSavedLocation && providers.length === 0 && (
+            <p className="providers-state">No tiffin providers currently deliver to this location.</p>
           )}
 
           {providers.map((provider) => (
@@ -131,6 +239,17 @@ function MessProviders({ auth, onSubscriptionCreated }) {
               <p>
                 <strong>Location:</strong> {provider.city}
               </p>
+              <p>
+                <strong>Service Address:</strong> {provider.service_address_text || "Not set"}
+              </p>
+              <p>
+                <strong>Radius:</strong> {provider.service_radius_km ? `${provider.service_radius_km} km` : "Not set"}
+              </p>
+              {provider.distance_km != null && (
+                <p>
+                  <strong>Distance:</strong> {provider.distance_km} km away
+                </p>
+              )}
               <p>
                 <strong>Rating:</strong> {provider.rating}
               </p>
@@ -158,8 +277,14 @@ function MessProviders({ auth, onSubscriptionCreated }) {
                     setSelectedForSubscribe(provider);
                     setSubscribeModal(true);
                   }}
-                  disabled={auth?.user?.role !== "customer"}
-                  title={auth?.user?.role !== "customer" ? "Customers only" : "Subscribe to this plan"}
+                  disabled={auth?.user?.role !== "customer" || !hasSavedLocation}
+                  title={
+                    auth?.user?.role !== "customer"
+                      ? "Customers only"
+                      : !hasSavedLocation
+                        ? "Set your location first"
+                        : "Subscribe to this plan"
+                  }
                 >
                   Subscribe
                 </button>
@@ -194,7 +319,6 @@ function MessProviders({ auth, onSubscriptionCreated }) {
         </div>
       )}
 
-      {/* Subscribe Modal */}
       <SubscribeModal
         auth={auth}
         provider={selectedForSubscribe}

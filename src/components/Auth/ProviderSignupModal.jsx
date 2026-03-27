@@ -2,6 +2,7 @@ import { useState } from "react";
 import "./LoginModal.css";
 import { loginUser, registerUser } from "../../api/client";
 import { validateProviderSignupForm } from "./authValidation";
+import LocationPicker from "../Location/LocationPicker";
 
 function ProviderSignupModal({ onBack, onClose, onSignupSuccess }) {
   const [form, setForm] = useState({
@@ -11,6 +12,11 @@ function ProviderSignupModal({ onBack, onClose, onSignupSuccess }) {
     mess_name: "",
     city: "",
     delivery_address: "",
+    serviceAddressText: "",
+    servicePlaceId: "",
+    serviceLatitude: null,
+    serviceLongitude: null,
+    serviceRadiusKm: "5",
     password: "",
     confirmPassword: "",
   });
@@ -22,6 +28,21 @@ function ProviderSignupModal({ onBack, onClose, onSignupSuccess }) {
       setError("");
     }
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleLocationSelect = (location) => {
+    if (error) {
+      setError("");
+    }
+
+    setForm((prev) => ({
+      ...prev,
+      delivery_address: location.label,
+      serviceAddressText: location.label,
+      servicePlaceId: location.placeId,
+      serviceLatitude: location.latitude,
+      serviceLongitude: location.longitude,
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -48,9 +69,18 @@ function ProviderSignupModal({ onBack, onClose, onSignupSuccess }) {
         mess_name: form.mess_name.trim(),
         city: form.city.trim(),
         contact: form.phone.trim(),
+        service_address_text: form.serviceAddressText.trim(),
+        service_place_id: form.servicePlaceId,
+        service_latitude: form.serviceLatitude,
+        service_longitude: form.serviceLongitude,
+        service_radius_km: Number(form.serviceRadiusKm),
       });
 
       const loginResult = await loginUser(form.email.trim(), form.password);
+      if (loginResult?.user?.role !== "provider" && loginResult?.user?.role !== "admin") {
+        setError("Provider signup completed, but the returned account is not a provider account.");
+        return;
+      }
       onSignupSuccess?.(loginResult);
       onClose();
     } catch (err) {
@@ -151,15 +181,36 @@ function ProviderSignupModal({ onBack, onClose, onSignupSuccess }) {
           </div>
 
           <div className="form-group">
-            <label htmlFor="prov-signup-address">Pickup / Service Address</label>
-            <textarea
-              id="prov-signup-address"
-              name="delivery_address"
-              placeholder="Business address and nearby landmark"
-              value={form.delivery_address}
-              onChange={handleChange}
-              rows="3"
+            <LocationPicker
+              label="Pickup / Service Address"
+              placeholder="Search your kitchen or business address"
+              value={{
+                label: form.serviceAddressText,
+                latitude: form.serviceLatitude,
+                longitude: form.serviceLongitude,
+                placeId: form.servicePlaceId,
+              }}
+              onSelect={handleLocationSelect}
+              onError={setError}
+              helperText="Choose a suggested place so we can save exact delivery coordinates."
             />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="prov-signup-radius">Delivery Radius (km)</label>
+            <input
+              id="prov-signup-radius"
+              name="serviceRadiusKm"
+              type="number"
+              min="1"
+              max="100"
+              step="0.5"
+              placeholder="e.g. 5"
+              value={form.serviceRadiusKm}
+              onChange={handleChange}
+              required
+            />
+            <p className="form-hint">Customers inside this radius will see your service.</p>
           </div>
 
           <div className="form-group">

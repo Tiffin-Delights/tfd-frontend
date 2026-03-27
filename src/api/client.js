@@ -57,8 +57,31 @@ export async function getProfile(token) {
   return apiRequest("/users/profile", { token });
 }
 
-export async function listProviders(token, city) {
-  const query = city ? `?city=${encodeURIComponent(city)}` : "";
+export async function updateUserLocation(token, payload) {
+  return apiRequest("/users/profile/location", {
+    method: "PUT",
+    token,
+    body: payload,
+  });
+}
+
+export async function listProviders(token, city, dietMode, customerLocation) {
+  const params = new URLSearchParams();
+
+  if (city) {
+    params.set("city", city);
+  }
+
+  if (dietMode === "veg" || dietMode === "nonveg") {
+    params.set("diet_mode", dietMode);
+  }
+
+  if (customerLocation?.latitude != null && customerLocation?.longitude != null) {
+    params.set("customer_latitude", customerLocation.latitude);
+    params.set("customer_longitude", customerLocation.longitude);
+  }
+
+  const query = params.toString() ? `?${params.toString()}` : "";
   return apiRequest(`/providers${query}`, { token });
 }
 
@@ -140,4 +163,12 @@ export async function deleteMenuDish(token, dishId) {
 
 export async function getProviderPricing(providerId, token) {
   return apiRequest(`/providers/${providerId}/pricing`, { token });
+}
+
+export async function updateProviderLocation(token, payload) {
+  return apiRequest("/providers/profile/location", {
+    method: "PUT",
+    token,
+    body: payload,
+  });
 }

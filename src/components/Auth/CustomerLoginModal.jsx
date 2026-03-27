@@ -29,6 +29,11 @@ function CustomerLoginModal({ onBack, onClose, onLoginSuccess, onSwitchToSignup 
 
     try {
       const result = await loginUser(form.email, form.password);
+      if (result?.user?.role !== "customer") {
+        setError("This account is not a customer account.");
+        return;
+      }
+
       if (onLoginSuccess) {
         onLoginSuccess(result);
       }

@@ -8,8 +8,6 @@ function CustomerSignupModal({ onBack, onClose, onSignupSuccess }) {
     name: "",
     email: "",
     phone: "",
-    location: "",
-    delivery_address: "",
     password: "",
     confirmPassword: "",
   });
@@ -42,11 +40,13 @@ function CustomerSignupModal({ onBack, onClose, onSignupSuccess }) {
         phone: form.phone.trim(),
         password: form.password,
         role: "customer",
-        location: form.location.trim() || null,
-        delivery_address: form.delivery_address.trim(),
       });
 
       const loginResult = await loginUser(form.email.trim(), form.password);
+      if (loginResult?.user?.role !== "customer") {
+        setError("Customer signup completed, but the returned account is not a customer account.");
+        return;
+      }
       onSignupSuccess?.(loginResult);
       onClose();
     } catch (err) {
@@ -116,32 +116,6 @@ function CustomerSignupModal({ onBack, onClose, onSignupSuccess }) {
               required
             />
             <p className="form-hint">Use a valid 10-digit phone number.</p>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="cust-signup-location">City / Location</label>
-            <input
-              id="cust-signup-location"
-              name="location"
-              type="text"
-              placeholder="e.g. Indore"
-              value={form.location}
-              onChange={handleChange}
-              autoComplete="address-level2"
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="cust-signup-address">Delivery Address</label>
-            <textarea
-              id="cust-signup-address"
-              name="delivery_address"
-              placeholder="Flat, building, street, landmark"
-              value={form.delivery_address}
-              onChange={handleChange}
-              rows="3"
-              required
-            />
           </div>
 
           <div className="form-group">
