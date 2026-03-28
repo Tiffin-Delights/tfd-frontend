@@ -10,8 +10,70 @@ import ProviderPhotosModal from "./ProviderPhotosModal";
 import StarRating from "../common/StarRating";
 import "./ProviderDashboard.css";
 
+function formatOverviewDate(value) {
+  if (!value) {
+    return "No scheduled service date yet";
+  }
+
+  const parsed = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) {
+    return String(value);
+  }
+
+  return parsed.toLocaleDateString(undefined, {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function formatInsightsDateRange(startValue, endValue) {
+  if (!startValue || !endValue) {
+    return "";
+  }
+
+  const start = new Date(`${startValue}T00:00:00`);
+  const end = new Date(`${endValue}T00:00:00`);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+    return "";
+  }
+
+  return `${start.toLocaleDateString(undefined, { day: "numeric", month: "short" })} - ${end.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}`;
+}
+
+function formatInsightsAxisLabel(value) {
+  if (!value) {
+    return "";
+  }
+
+  const parsed = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) {
+    return String(value);
+  }
+
+  return parsed.toLocaleDateString(undefined, {
+    day: "numeric",
+    month: "short",
+  });
+}
+
+function formatInsightsHeading(rangeKey) {
+  if (rangeKey === "this_week") {
+    return "This Week Insights";
+  }
+  if (rangeKey === "last_30_days") {
+    return "Last 30 Days Insights";
+  }
+  return "This Month Insights";
+}
+
 function ProviderDashboard({ auth }) {
   const [profileData, setProfileData] = useState(null);
+  const [insightsRange, setInsightsRange] = useState("this_month");
+  const [insightsData, setInsightsData] = useState(null);
+  const [insightsLoading, setInsightsLoading] = useState(false);
+  const [insightsError, setInsightsError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeModal, setActiveModal] = useState(null);
@@ -73,6 +135,42 @@ function ProviderDashboard({ auth }) {
     };
   }, [auth?.token, fetchProviderProfile]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchProviderInsights() {
+      if (!auth?.token) {
+        return;
+      }
+
+      try {
+        setInsightsLoading(true);
+        setInsightsError(null);
+        const response = await apiRequest(`/providers/insights?range=${insightsRange}`, {
+          token: auth?.token,
+        });
+
+        if (!cancelled) {
+          setInsightsData(response);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setInsightsError(err.message || "Failed to load monthly insights");
+        }
+      } finally {
+        if (!cancelled) {
+          setInsightsLoading(false);
+        }
+      }
+    }
+
+    fetchProviderInsights();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [auth?.token, insightsRange]);
+
   if (loading) {
     return (
       <div className="provider-dashboard">
@@ -101,19 +199,87 @@ function ProviderDashboard({ auth }) {
     active_customers,
     total_orders,
     menu_items_count,
+    next_service_date,
     upcoming_breakfast_count,
     upcoming_lunch_count,
     upcoming_dinner_count,
+    cancelled_breakfast_count,
+    cancelled_lunch_count,
+    cancelled_dinner_count,
     cancelled_meals_count,
     wallet_credit_issued,
   } = profileData;
+  const dashboardDisplayName = auth?.user?.name || profileData.owner_name || profileData.mess_name;
+  const nextDayMeals = upcoming_breakfast_count + upcoming_lunch_count + upcoming_dinner_count;
+  const nextServiceDateLabel = formatOverviewDate(next_service_date);
+  const mealSegments = [
+    { label: "Breakfast", value: upcoming_breakfast_count, color: "var(--provider-chart-breakfast)" },
+    { label: "Lunch", value: upcoming_lunch_count, color: "var(--provider-chart-lunch)" },
+    { label: "Dinner", value: upcoming_dinner_count, color: "var(--provider-chart-dinner)" },
+  ];
+  const totalKitchenLoad = mealSegments.reduce((sum, segment) => sum + segment.value, 0);
+  let currentAngle = 0;
+  const mealChartBackground = totalKitchenLoad > 0
+    ? `conic-gradient(${mealSegments
+        .map((segment) => {
+          const nextAngle = currentAngle + (segment.value / totalKitchenLoad) * 360;
+          const stop = `${segment.color} ${currentAngle}deg ${nextAngle}deg`;
+          currentAngle = nextAngle;
+          return stop;
+        })
+        .join(", ")})`
+    : "conic-gradient(color-mix(in srgb, var(--text-accent) 10%, transparent) 0deg 360deg)";
+  const quickActions = [
+    { key: "coverage", label: "Set Delivery Area", variant: "primary" },
+    { key: "menu", label: "Upload Menu Items", variant: "primary" },
+    { key: "photos", label: "Manage Photos", variant: "primary" },
+    { key: "pricing", label: "Set Pricing", variant: "primary" },
+    { key: "orders", label: "View Orders", variant: "secondary" },
+    { key: "subscribers", label: "Manage Subscribers", variant: "secondary" },
+    { key: "feedback", label: "View Feedback", variant: "secondary" },
+  ];
+  const insightsRangeOptions = [
+    { key: "this_week", label: "This Week" },
+    { key: "this_month", label: "This Month" },
+    { key: "last_30_days", label: "Last 30 Days" },
+  ];
+  const insightsSummaryCards = insightsData
+    ? [
+        { label: "Orders", value: insightsData.orders_count, tone: "warm" },
+        { label: "Active Subscribers", value: insightsData.active_subscribers_count, tone: "green" },
+        { label: "New Customers", value: insightsData.new_customers_count, tone: "blue" },
+        { label: "Not Renewed", value: insightsData.not_renewed_count, tone: "rose" },
+      ]
+    : [];
+  const trendValues = insightsData?.daily_trend || [];
+  const trendMax = Math.max(
+    ...trendValues.flatMap((point) => [point.new_customers_count || 0, point.not_renewed_count || 0]),
+    1,
+  );
+  const insightsDateLabel = formatInsightsDateRange(insightsData?.start_date, insightsData?.end_date);
+  const insightsHeading = formatInsightsHeading(insightsRange);
+  const netCustomerChange = (insightsData?.new_customers_count || 0) - (insightsData?.not_renewed_count || 0);
+  const renewalRate = (insightsData?.ended_plans_count || 0) > 0
+    ? Math.round(((insightsData?.renewed_count || 0) / insightsData.ended_plans_count) * 100)
+    : null;
+  const growthSignal = netCustomerChange > 0
+    ? "Customer base is growing in this range"
+    : netCustomerChange < 0
+      ? "More customers left than joined in this range"
+      : "Customer flow is balanced in this range";
+  const ratingSignal = (insightsData?.feedback_count || 0) > 0
+    ? `${Number(insightsData?.average_rating || 0).toFixed(1)} average from ${insightsData.feedback_count} feedback entries`
+    : "No new feedback recorded in this range";
 
   return (
     <div className="provider-dashboard">
       <div className="dashboard-container">
         <div className="dashboard-header">
-          <h1 className="dashboard-title">Provider Dashboard</h1>
-          <p className="provider-name">{profileData.mess_name}</p>
+          <h1 className="dashboard-title">{dashboardDisplayName}&apos;s Dashboard</h1>
+          <p className="provider-name">
+            {profileData.mess_name}
+            {profileData.city ? ` · ${profileData.city}` : ""}
+          </p>
         </div>
 
         <div className="provider-info-card">
@@ -157,12 +323,62 @@ function ProviderDashboard({ auth }) {
             </div>
           </div>
         </div>
+                <div className="recent-activity">
+          <h3>Service Overview</h3>
+          <div className="activity-chart-card activity-chart-card--solo">
+            <div className="activity-chart-card__header">
+              <h4>Tomorrow&apos;s Kitchen Mix</h4>
+              <p>{nextDayMeals} scheduled meals</p>
+              <div className="activity-chart-card__date">
+                For {nextServiceDateLabel}
+              </div>
+            </div>
+            <div className="activity-chart">
+              <div className="activity-chart__ring" style={{ background: mealChartBackground }}>
+                <div className="activity-chart__center">
+                  <strong>{nextDayMeals}</strong>
+                  <span>Meals</span>
+                </div>
+              </div>
+              <div className="activity-chart__details">
+                <div className="activity-chart__legend">
+                  {mealSegments.map((segment) => (
+                    <div key={segment.label} className="activity-chart__legend-item">
+                      <span
+                        className="activity-chart__swatch"
+                        style={{ background: segment.color }}
+                      />
+                      <div>
+                        <strong>{segment.value}</strong>
+                        <p>{segment.label}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="activity-highlights">
+                  <div className="activity-highlight">
+                    <span>Breakfast Cancelled</span>
+                    <strong>{cancelled_breakfast_count || 0}</strong>
+                  </div>
+                  <div className="activity-highlight">
+                    <span>Lunch Cancelled</span>
+                    <strong>{cancelled_lunch_count || 0}</strong>
+                  </div>
+                  <div className="activity-highlight">
+                    <span>Dinner Cancelled</span>
+                    <strong>{cancelled_dinner_count || 0}</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <div className="stats-container">
           <div className="stat-card">
             <div className="stat-number">{active_customers}</div>
             <div className="stat-label">Active Customers</div>
-            <div className="stat-description">Currently taking your service</div>
+            <div className="stat-description">Taking your service</div>
           </div>
 
           <div className="stat-card">
@@ -174,55 +390,138 @@ function ProviderDashboard({ auth }) {
           <div className="stat-card">
             <div className="stat-number">{menu_items_count}</div>
             <div className="stat-label">Menu Items</div>
-            <div className="stat-description">Items in your menu</div>
+            <div className="stat-description">Currently listed</div>
           </div>
 
           <div className="stat-card">
-            <div className="stat-number">{upcoming_breakfast_count + upcoming_lunch_count + upcoming_dinner_count}</div>
+            <div className="stat-number">{nextDayMeals}</div>
             <div className="stat-label">Next-Day Meals</div>
-            <div className="stat-description">Breakfast {upcoming_breakfast_count} · Lunch {upcoming_lunch_count} · Dinner {upcoming_dinner_count}</div>
+            <div className="stat-description">B {upcoming_breakfast_count} · L {upcoming_lunch_count} · D {upcoming_dinner_count}</div>
           </div>
 
           <div className="stat-card">
             <div className="stat-number">{cancelled_meals_count}</div>
             <div className="stat-label">Meal Cancellations</div>
-            <div className="stat-description">Wallet credit issued ₹{Number(wallet_credit_issued || 0).toFixed(2)}</div>
+            <div className="stat-description">Wallet credit ₹{Number(wallet_credit_issued || 0).toFixed(2)}</div>
           </div>
         </div>
 
         <div className="quick-actions">
           <h3>Quick Actions</h3>
           <div className="actions-grid">
-            <button className="action-btn primary" onClick={() => setActiveModal("coverage")}>Set Delivery Area</button>
-            <button className="action-btn primary" onClick={() => setActiveModal("menu")}>Upload Menu Items</button>
-            <button className="action-btn primary" onClick={() => setActiveModal("photos")}>Manage Photos</button>
-            <button className="action-btn primary" onClick={() => setActiveModal("pricing")}>💰 Set Pricing</button>
-            <button className="action-btn secondary" onClick={() => setActiveModal("orders")}>View Orders</button>
-            <button className="action-btn secondary" onClick={() => setActiveModal("subscribers")}>Manage Subscribers</button>
-            <button className="action-btn secondary" onClick={() => setActiveModal("feedback")}>View Feedback</button>
+            {quickActions.map((action) => (
+              <button
+                key={action.key}
+                className={`action-btn ${action.variant}`}
+                onClick={() => setActiveModal(action.key)}
+              >
+                {action.label}
+              </button>
+            ))}
           </div>
         </div>
 
-        <div className="recent-activity">
-          <h3>Service Overview</h3>
-          <div className="activity-content">
-            <p>
-              You have <strong>{active_customers}</strong> active customers taking your tiffin service.
-            </p>
-            <p>
-              Total orders received: <strong>{total_orders}</strong>
-            </p>
-            <p>
-              Your menu currently has <strong>{menu_items_count}</strong> items.
-            </p>
-            <p>
-              Delivery coverage: <strong>{profileData.service_radius_km ? `${profileData.service_radius_km} km` : "not configured"}</strong>
-            </p>
-            <p>
-              Upcoming kitchen load: <strong>{upcoming_breakfast_count}</strong> breakfast, <strong>{upcoming_lunch_count}</strong> lunch, <strong>{upcoming_dinner_count}</strong> dinner.
-            </p>
+        <div className="provider-insights">
+          <div className="provider-insights__header">
+            <div>
+              <h3>{insightsHeading}</h3>
+              <p>{insightsDateLabel || "Track your recent provider performance"}</p>
+            </div>
+            <div className="provider-insights__filters">
+              {insightsRangeOptions.map((option) => (
+                <button
+                  key={option.key}
+                  type="button"
+                  className={`provider-insights__filter ${insightsRange === option.key ? "active" : ""}`}
+                  onClick={() => setInsightsRange(option.key)}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
           </div>
+
+          {insightsError && <div className="error-message">{insightsError}</div>}
+
+          {insightsLoading && !insightsData ? (
+            <div className="loading-message">Loading monthly insights...</div>
+          ) : (
+            <>
+              <div className="provider-insights__summary">
+                {insightsSummaryCards.map((card) => (
+                  <article key={card.label} className={`provider-insights__card provider-insights__card--${card.tone}`}>
+                    <span>{card.label}</span>
+                    <strong>{card.value}</strong>
+                  </article>
+                ))}
+              </div>
+
+              <div className="provider-insights__grid">
+                <div className="provider-insights__panel">
+                  <div className="provider-insights__panel-header">
+                    <h4>Daily Trend</h4>
+                    <p>Non-renewals vs new joins</p>
+                  </div>
+                  <div className="provider-insights__trend">
+                    {trendValues.map((point) => (
+                      <div key={point.date} className="provider-insights__trend-item">
+                        <div className="provider-insights__trend-bars">
+                          <div
+                            className="provider-insights__trend-bar provider-insights__trend-bar--new-customers"
+                            style={{ height: `${Math.max(((point.new_customers_count || 0) / trendMax) * 100, point.new_customers_count ? 10 : 0)}%` }}
+                            title={`New joins: ${point.new_customers_count || 0}`}
+                          />
+                          <div
+                            className="provider-insights__trend-bar provider-insights__trend-bar--not-renewed"
+                            style={{ height: `${Math.max(((point.not_renewed_count || 0) / trendMax) * 100, point.not_renewed_count ? 10 : 0)}%` }}
+                            title={`Not renewed: ${point.not_renewed_count || 0}`}
+                          />
+                        </div>
+                        <span className="provider-insights__trend-label">{formatInsightsAxisLabel(point.date)}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="provider-insights__legend">
+                    <span><i className="provider-insights__legend-dot provider-insights__legend-dot--new-customers" /> New Joins</span>
+                    <span><i className="provider-insights__legend-dot provider-insights__legend-dot--not-renewed" /> Not Renewed</span>
+                  </div>
+                </div>
+
+                <div className="provider-insights__panel">
+                  <div className="provider-insights__panel-header">
+                    <h4>Range Analysis</h4>
+                    <p>What this period says about customer retention</p>
+                  </div>
+                  <div className="provider-insights__analysis">
+                    <div className="provider-insights__analysis-item">
+                      <span>Net Customer Change</span>
+                      <strong className={netCustomerChange >= 0 ? "positive" : "negative"}>
+                        {netCustomerChange >= 0 ? `+${netCustomerChange}` : netCustomerChange}
+                      </strong>
+                      <p>{growthSignal}</p>
+                    </div>
+                    <div className="provider-insights__analysis-item">
+                      <span>Renewal Health</span>
+                      <strong>{renewalRate == null ? "-" : `${renewalRate}%`}</strong>
+                      <p>
+                        {renewalRate == null
+                          ? "No plans ended in this range"
+                          : `${insightsData?.renewed_count || 0} of ${insightsData?.ended_plans_count || 0} ended plans were followed by another plan`}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="provider-insights__rating">
+                    <span>Average Rating</span>
+                    <strong>{Number(insightsData?.average_rating || 0).toFixed(1)}</strong>
+                    <p>{ratingSignal}</p>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </div>
+
+
       </div>
 
       <OrdersModal

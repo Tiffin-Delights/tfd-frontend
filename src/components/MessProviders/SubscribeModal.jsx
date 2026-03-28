@@ -1,7 +1,20 @@
-import { useState } from "react";
-import { createPayment, createSubscriptionCheckout, verifyPayment } from "../../api/client";
+import { useEffect, useState } from "react";
+import { createPayment, createSubscriptionCheckout, getMySubscriptions, verifyPayment } from "../../api/client";
 import StarRating from "../common/StarRating";
 import "./SubscribeModal.css";
+
+function formatDisplayDate(value) {
+  if (!value) {
+    return "-";
+  }
+
+  const parsed = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) {
+    return value;
+  }
+
+  return parsed.toLocaleDateString();
+}
 
 function SubscribeModal({ auth, provider, isOpen, onClose, onSubscribeSuccess }) {
   const [selectedPlan, setSelectedPlan] = useState("weekly");
@@ -9,16 +22,51 @@ function SubscribeModal({ auth, provider, isOpen, onClose, onSubscribeSuccess })
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [paymentSummary, setPaymentSummary] = useState(null);
+  const [mySubscriptions, setMySubscriptions] = useState([]);
+  const [subscriptionsLoading, setSubscriptionsLoading] = useState(false);
+  const [switchWarningOpen, setSwitchWarningOpen] = useState(false);
+  const [sameMessWarningOpen, setSameMessWarningOpen] = useState(false);
+  const [lastSameMessWarningKey, setLastSameMessWarningKey] = useState("");
 
-  if (!isOpen || !provider) return null;
+  useEffect(() => {
+    let cancelled = false;
 
+    async function loadMySubscriptions() {
+      if (!auth?.token || !isOpen) {
+        return;
+      }
+
+      try {
+        setSubscriptionsLoading(true);
+        const data = await getMySubscriptions(auth.token);
+        if (!cancelled) {
+          setMySubscriptions(Array.isArray(data) ? data : []);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          console.error("Failed to load subscriptions:", err);
+        }
+      } finally {
+        if (!cancelled) {
+          setSubscriptionsLoading(false);
+        }
+      }
+    }
+
+    loadMySubscriptions();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [auth?.token, isOpen]);
+  const providerId = provider?.provider_id;
   const toPriceNumber = (value) => {
     const numeric = Number(value);
     return Number.isFinite(numeric) ? numeric : 0;
   };
 
-  const weeklyPrice = toPriceNumber(provider.weekly_price);
-  const monthlyPrice = toPriceNumber(provider.monthly_price);
+  const weeklyPrice = toPriceNumber(provider?.weekly_price);
+  const monthlyPrice = toPriceNumber(provider?.monthly_price);
 
   const calculateEndDate = (start, plan) => {
     if (!start) return "";
@@ -33,21 +81,50 @@ function SubscribeModal({ auth, provider, isOpen, onClose, onSubscribeSuccess })
 
   const endDate = calculateEndDate(startDate, selectedPlan);
   const selectedPrice = selectedPlan === "weekly" ? weeklyPrice : monthlyPrice;
+  const overlappingSubscriptions = startDate
+    ? mySubscriptions.filter(
+        (subscription) =>
+          (subscription.status || "").toLowerCase() === "active" &&
+          String(subscription.end_date || "") >= startDate,
+      )
+    : [];
+  const sameProviderConflict = providerId == null
+    ? null
+    : overlappingSubscriptions.find(
+        (subscription) => Number(subscription.provider_id) === Number(providerId),
+      );
+  const otherProviderConflicts = providerId == null
+    ? []
+    : overlappingSubscriptions.filter(
+        (subscription) => Number(subscription.provider_id) !== Number(providerId),
+      );
+  const conflictingMessNames = otherProviderConflicts.map((subscription) => subscription.customer_name).join(", ");
+  const sameProviderConflictKey = sameProviderConflict && providerId != null
+    ? `${providerId}-${sameProviderConflict.end_date}-${startDate}`
+    : "";
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError(null);
-
-    if (!startDate) {
-      setError("Please select a start date");
+  useEffect(() => {
+    if (!isOpen) {
+      setSameMessWarningOpen(false);
+      setLastSameMessWarningKey("");
       return;
     }
 
-    if (!selectedPrice || selectedPrice <= 0) {
-      setError("Provider has not set pricing for this plan yet");
+    if (!sameProviderConflictKey) {
+      setSameMessWarningOpen(false);
+      setLastSameMessWarningKey("");
       return;
     }
 
+    if (sameProviderConflictKey !== lastSameMessWarningKey) {
+      setSameMessWarningOpen(true);
+      setLastSameMessWarningKey(sameProviderConflictKey);
+    }
+  }, [isOpen, lastSameMessWarningKey, sameProviderConflictKey]);
+
+  if (!isOpen || !provider) return null;
+
+  const completeSubscription = async () => {
     try {
       setLoading(true);
       const checkout = await createSubscriptionCheckout(auth?.token, {
@@ -70,7 +147,7 @@ function SubscribeModal({ auth, provider, isOpen, onClose, onSubscribeSuccess })
       });
 
       setPaymentSummary(checkout);
-
+      setSwitchWarningOpen(false);
       onSubscribeSuccess?.();
       onClose();
     } catch (err) {
@@ -78,6 +155,33 @@ function SubscribeModal({ auth, provider, isOpen, onClose, onSubscribeSuccess })
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError(null);
+
+    if (!startDate) {
+      setError("Please select a start date");
+      return;
+    }
+
+    if (!selectedPrice || selectedPrice <= 0) {
+      setError("Provider has not set pricing for this plan yet");
+      return;
+    }
+
+    if (sameProviderConflict) {
+      setSameMessWarningOpen(true);
+      return;
+    }
+
+    if (otherProviderConflicts.length > 0) {
+      setSwitchWarningOpen(true);
+      return;
+    }
+
+    await completeSubscription();
   };
 
   const getMinStartDate = () => {
@@ -155,6 +259,7 @@ function SubscribeModal({ auth, provider, isOpen, onClose, onSubscribeSuccess })
                 required
               />
               <small>Must be tomorrow or later</small>
+              {subscriptionsLoading && <small>Checking your active subscriptions...</small>}
             </div>
           </div>
 
@@ -224,12 +329,77 @@ function SubscribeModal({ auth, provider, isOpen, onClose, onSubscribeSuccess })
             <button
               type="submit"
               className="btn primary"
-              disabled={loading || !selectedPrice || selectedPrice <= 0}
+              disabled={loading || subscriptionsLoading || !selectedPrice || selectedPrice <= 0 || Boolean(sameProviderConflict)}
             >
               {loading ? "Processing..." : `Pay & Subscribe - ₹${selectedPrice.toFixed(2)}`}
             </button>
           </div>
         </form>
+
+        {switchWarningOpen && (
+          <div className="subscribe-confirm-overlay" onClick={() => setSwitchWarningOpen(false)}>
+            <div className="subscribe-confirm-dialog" onClick={(event) => event.stopPropagation()}>
+              <h3>Active Subscription Found</h3>
+              <p>
+                You are already subscribed to <strong>{conflictingMessNames}</strong>.
+              </p>
+              <p>
+                Do you want to continue with <strong>{provider.mess_name}</strong>?
+              </p>
+              <div className="subscribe-confirm-actions">
+                <button
+                  type="button"
+                  className="btn ghost"
+                  onClick={() => setSwitchWarningOpen(false)}
+                  disabled={loading}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn primary"
+                  onClick={completeSubscription}
+                  disabled={loading}
+                >
+                  {loading ? "Processing..." : "Continue"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {sameMessWarningOpen && sameProviderConflict && (
+          <div className="subscribe-confirm-overlay" onClick={() => setSameMessWarningOpen(false)}>
+            <div className="subscribe-confirm-dialog subscribe-confirm-dialog--blocked" onClick={(event) => event.stopPropagation()}>
+              <div className="subscribe-confirm-header">
+                <h3>Already Subscribed</h3>
+                <button
+                  type="button"
+                  className="subscribe-confirm-close"
+                  onClick={() => setSameMessWarningOpen(false)}
+                  aria-label="Close warning"
+                >
+                  ×
+                </button>
+              </div>
+              <p>
+                You already have an active subscription for <strong>{provider.mess_name}</strong>.
+              </p>
+              <p>
+                Active till <strong>{formatDisplayDate(sameProviderConflict.end_date)}</strong>.
+              </p>
+              <div className="subscribe-confirm-actions">
+                <button
+                  type="button"
+                  className="btn primary"
+                  onClick={() => setSameMessWarningOpen(false)}
+                >
+                  Okay
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

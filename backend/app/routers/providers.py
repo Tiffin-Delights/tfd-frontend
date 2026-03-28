@@ -1,3 +1,4 @@
+from datetime import date, timedelta
 from decimal import Decimal, ROUND_HALF_UP
 import math
 from pathlib import Path
@@ -26,6 +27,7 @@ from app.models import (
 from app.schemas import (
     ProviderCreateRequest,
     ProviderDashboardResponse,
+    ProviderInsightsResponse,
     ProviderLocationUpdateRequest,
     ProviderPhotoResponse,
     ProviderPricingResponse,
@@ -104,6 +106,19 @@ def _to_decimal(value: float | Decimal | None, digits: str = "0.01") -> Decimal 
     if value is None:
         return None
     return Decimal(str(value)).quantize(Decimal(digits), rounding=ROUND_HALF_UP)
+
+
+def _provider_insights_range(range_key: str) -> tuple[date, date]:
+    today = date.today()
+
+    if range_key == "this_week":
+        return today - timedelta(days=today.weekday()), today
+    if range_key == "this_month":
+        return today.replace(day=1), today
+    if range_key == "last_30_days":
+        return today - timedelta(days=29), today
+
+    raise HTTPException(status_code=400, detail="Unsupported insights range")
 
 
 def _distance_km(
@@ -284,6 +299,24 @@ def get_provider_profile(
         SubscriptionMeal.meal_type == "dinner",
         SubscriptionMeal.status == SubscriptionMealStatus.scheduled,
     ).count() if next_service_date else 0
+    cancelled_breakfast_count = db.query(SubscriptionMeal).filter(
+        SubscriptionMeal.provider_id == provider.provider_id,
+        SubscriptionMeal.service_date == next_service_date,
+        SubscriptionMeal.meal_type == "breakfast",
+        SubscriptionMeal.status == SubscriptionMealStatus.cancelled,
+    ).count() if next_service_date else 0
+    cancelled_lunch_count = db.query(SubscriptionMeal).filter(
+        SubscriptionMeal.provider_id == provider.provider_id,
+        SubscriptionMeal.service_date == next_service_date,
+        SubscriptionMeal.meal_type == "lunch",
+        SubscriptionMeal.status == SubscriptionMealStatus.cancelled,
+    ).count() if next_service_date else 0
+    cancelled_dinner_count = db.query(SubscriptionMeal).filter(
+        SubscriptionMeal.provider_id == provider.provider_id,
+        SubscriptionMeal.service_date == next_service_date,
+        SubscriptionMeal.meal_type == "dinner",
+        SubscriptionMeal.status == SubscriptionMealStatus.cancelled,
+    ).count() if next_service_date else 0
     cancelled_meals_count = db.query(SubscriptionMeal).filter(
         SubscriptionMeal.provider_id == provider.provider_id,
         SubscriptionMeal.status == SubscriptionMealStatus.cancelled,
@@ -321,6 +354,9 @@ def get_provider_profile(
         "upcoming_breakfast_count": upcoming_breakfast_count,
         "upcoming_lunch_count": upcoming_lunch_count,
         "upcoming_dinner_count": upcoming_dinner_count,
+        "cancelled_breakfast_count": cancelled_breakfast_count,
+        "cancelled_lunch_count": cancelled_lunch_count,
+        "cancelled_dinner_count": cancelled_dinner_count,
         "cancelled_meals_count": cancelled_meals_count,
         "wallet_credit_issued": _to_decimal(wallet_credit_issued or 0),
         "photos": [
@@ -333,6 +369,130 @@ def get_provider_profile(
             }
             for photo in sorted(provider.photos, key=lambda item: (item.display_order, item.photo_id))
         ],
+    }
+
+
+@router.get("/insights", response_model=ProviderInsightsResponse)
+def get_provider_insights(
+    range_key: str = Query("this_month", alias="range"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles(UserRole.provider.value)),
+):
+    provider = db.query(Provider).filter(Provider.owner_user_id == current_user.user_id).first()
+
+    if not provider:
+        raise HTTPException(status_code=404, detail="Provider profile not found")
+
+    start_date, end_date = _provider_insights_range(range_key)
+
+    orders_count = db.query(Order).filter(
+        Order.provider_id == provider.provider_id,
+        func.date(Order.created_at) >= start_date,
+        func.date(Order.created_at) <= end_date,
+    ).count()
+
+    active_subscribers_count = (
+        db.query(func.count(func.distinct(Subscription.user_id)))
+        .filter(
+            Subscription.provider_id == provider.provider_id,
+            Subscription.start_date <= end_date,
+            Subscription.end_date >= start_date,
+        )
+        .scalar()
+        or 0
+    )
+
+    provider_subscriptions = (
+        db.query(Subscription)
+        .filter(Subscription.provider_id == provider.provider_id)
+        .order_by(Subscription.user_id.asc(), Subscription.start_date.asc(), Subscription.subscription_id.asc())
+        .all()
+    )
+
+    subscriptions_by_user: dict[int, list[Subscription]] = {}
+    for subscription in provider_subscriptions:
+        subscriptions_by_user.setdefault(subscription.user_id, []).append(subscription)
+
+    new_customers_by_day: dict[date, int] = {}
+    not_renewed_by_day: dict[date, int] = {}
+    new_customers_count = 0
+    not_renewed_users: set[int] = set()
+    ended_plans_count = 0
+    renewed_count = 0
+
+    for user_id, subscriptions in subscriptions_by_user.items():
+        first_subscription = min(subscriptions, key=lambda item: item.created_at)
+        first_created_date = first_subscription.created_at.date()
+        if start_date <= first_created_date <= end_date:
+            new_customers_count += 1
+            new_customers_by_day[first_created_date] = new_customers_by_day.get(first_created_date, 0) + 1
+
+        for index, subscription in enumerate(subscriptions):
+            if not (start_date <= subscription.end_date <= end_date):
+                continue
+
+            ended_plans_count += 1
+            has_future_plan = any(
+                later_subscription.start_date > subscription.end_date
+                for later_subscription in subscriptions[index + 1:]
+            )
+            if not has_future_plan:
+                not_renewed_users.add(user_id)
+                not_renewed_by_day[subscription.end_date] = not_renewed_by_day.get(subscription.end_date, 0) + 1
+            else:
+                renewed_count += 1
+
+    average_rating_raw = (
+        db.query(func.avg(Feedback.rating))
+        .filter(
+            Feedback.provider_id == provider.provider_id,
+            func.date(Feedback.created_at) >= start_date,
+            func.date(Feedback.created_at) <= end_date,
+        )
+        .scalar()
+    )
+    feedback_count = db.query(Feedback).filter(
+        Feedback.provider_id == provider.provider_id,
+        func.date(Feedback.created_at) >= start_date,
+        func.date(Feedback.created_at) <= end_date,
+    ).count()
+
+    orders_by_day_rows = (
+        db.query(func.date(Order.created_at).label("day"), func.count(Order.order_id).label("count"))
+        .filter(
+            Order.provider_id == provider.provider_id,
+            func.date(Order.created_at) >= start_date,
+            func.date(Order.created_at) <= end_date,
+        )
+        .group_by(func.date(Order.created_at))
+        .all()
+    )
+    orders_by_day = {row.day: int(row.count or 0) for row in orders_by_day_rows}
+    daily_trend = []
+    current_day = start_date
+    while current_day <= end_date:
+        daily_trend.append(
+            {
+                "date": current_day,
+                "new_customers_count": new_customers_by_day.get(current_day, 0),
+                "not_renewed_count": not_renewed_by_day.get(current_day, 0),
+            }
+        )
+        current_day += timedelta(days=1)
+
+    return {
+        "range_key": range_key,
+        "start_date": start_date,
+        "end_date": end_date,
+        "orders_count": orders_count,
+        "active_subscribers_count": int(active_subscribers_count),
+        "new_customers_count": new_customers_count,
+        "not_renewed_count": len(not_renewed_users),
+        "ended_plans_count": ended_plans_count,
+        "renewed_count": renewed_count,
+        "average_rating": _format_rating(average_rating_raw),
+        "feedback_count": feedback_count,
+        "daily_trend": daily_trend,
     }
 
 

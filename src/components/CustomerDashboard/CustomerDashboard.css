@@ -1,7 +1,7 @@
 .customer-dashboard {
   min-height: 100vh;
   background: var(--panel-shell-bg);
-  padding: 96px 24px 52px;
+  padding: 20px 24px 52px;
 }
 
 .customer-dashboard .dashboard-container {
