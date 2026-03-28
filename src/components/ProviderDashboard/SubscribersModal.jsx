@@ -7,25 +7,40 @@ function SubscribersModal({ auth, isOpen, onClose }) {
   const [subscribers, setSubscribers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const token = auth?.token;
 
   useEffect(() => {
-    if (isOpen && auth?.token) {
-      fetchSubscribers();
+    if (!isOpen || !token) {
+      return undefined;
     }
-  }, [isOpen, auth?.token]);
 
-  const fetchSubscribers = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await getProviderSubscriptions(auth.token);
-      setSubscribers(data);
-    } catch (err) {
-      setError(err.message || "Failed to load subscribers");
-    } finally {
-      setLoading(false);
+    let cancelled = false;
+
+    async function loadSubscribers() {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await getProviderSubscriptions(token);
+        if (!cancelled) {
+          setSubscribers(data);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err.message || "Failed to load subscribers");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
     }
-  };
+
+    loadSubscribers();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, token]);
 
   if (!isOpen) return null;
 

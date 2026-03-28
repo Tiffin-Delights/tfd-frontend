@@ -4,7 +4,7 @@ This guide covers full backend setup, migration, seeding, and local run.
 
 ## 1. Prerequisites
 
-- Python 3.11+ (recommended)
+- Python matching `.python-version` (`3.11.12`) or another compatible Python 3.11 release
 - PostgreSQL 14+
 - pip
 - Git
@@ -26,8 +26,8 @@ source .venv/bin/activate
 ## 4. Install dependencies
 
 ```bash
-pip install --upgrade pip
-pip install -r requirements.txt
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 ```
 
 ## 5. Configure environment variables
@@ -45,7 +45,7 @@ DATABASE_URL=postgresql://YOUR_POSTGRES_USER:YOUR_POSTGRES_PASSWORD@localhost:54
 SECRET_KEY=change_this_secret_in_production
 ACCESS_TOKEN_EXPIRE_MINUTES=1440
 RAZORPAY_WEBHOOK_SECRET=change_this_webhook_secret
-FRONTEND_ORIGIN=http://localhost:5173
+FRONTEND_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
 ```
 
 Keep machine-specific credentials only in `backend/.env`. That file is ignored by git.
@@ -55,7 +55,7 @@ Keep machine-specific credentials only in `backend/.env`. That file is ignored b
 Run the app and it will try to create the PostgreSQL database from `DATABASE_URL` if it does not already exist, then create the tables automatically:
 
 ```bash
-uvicorn app.main:app --reload --port 8000
+python -m uvicorn app.main:app --reload --port 8000
 ```
 
 This requires the PostgreSQL server itself to already be running, and the provided user to have permission to create a database.
@@ -87,7 +87,7 @@ Demo users list:
 ## 9. Run backend server
 
 ```bash
-uvicorn app.main:app --reload --port 8000
+python -m uvicorn app.main:app --reload --port 8000
 ```
 
 Python bytecode generation is disabled for local runs in this repo, so `__pycache__` and `.pyc` files should not be created.
@@ -115,10 +115,11 @@ Expected: HTTP 200 response.
 ### Issue: `ModuleNotFoundError` or import errors
 
 - Ensure venv is active.
+- Ensure you are running `python -m uvicorn ...` from that same venv, not a globally installed `uvicorn`.
 - Reinstall requirements:
 
 ```bash
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 ```
 
 ### Issue: Database connection refused
@@ -134,7 +135,7 @@ pip install -r requirements.txt
 
 ### Issue: CORS blocked from frontend
 
-- Verify `FRONTEND_ORIGIN` in `.env` matches frontend URL.
+- Verify `FRONTEND_ORIGINS` in `.env` includes the frontend URL you are using.
 
 ## 12. Dev workflow recommendation
 

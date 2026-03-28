@@ -15,21 +15,48 @@ function MenuUploadModal({ auth, isOpen, onClose, onUploadSuccess }) {
   const [loadingMenu, setLoadingMenu] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(null);
   const [activeTab, setActiveTab] = useState("form"); // "form" or "view"
+  const token = auth?.token;
 
   const days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
   const mealTypes = ["breakfast", "lunch", "snacks", "dinner"];
 
   // Fetch existing menu items on modal open
   useEffect(() => {
-    if (isOpen) {
-      loadExistingMenu();
+    if (!isOpen || !token) {
+      return undefined;
     }
-  }, [isOpen]);
+
+    let cancelled = false;
+
+    async function loadMenuOnOpen() {
+      try {
+        setLoadingMenu(true);
+        const data = await getMyMenu(token);
+        if (!cancelled) {
+          setMenuItems(data || []);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          console.error("Failed to load menu:", err);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingMenu(false);
+        }
+      }
+    }
+
+    loadMenuOnOpen();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, token]);
 
   const loadExistingMenu = async () => {
     try {
       setLoadingMenu(true);
-      const data = await getMyMenu(auth?.token);
+      const data = await getMyMenu(token);
       setMenuItems(data || []);
     } catch (err) {
       console.error("Failed to load menu:", err);
@@ -69,7 +96,7 @@ function MenuUploadModal({ auth, isOpen, onClose, onUploadSuccess }) {
         dishes: dishesArray
       };
 
-      await uploadMenuDish(auth?.token, payload);
+      await uploadMenuDish(token, payload);
 
       setSuccess(true);
       setFormData({
@@ -102,7 +129,7 @@ function MenuUploadModal({ auth, isOpen, onClose, onUploadSuccess }) {
 
     try {
       setDeleteLoading(itemId);
-      await deleteMenuDish(auth?.token, itemId);
+      await deleteMenuDish(token, itemId);
       setMenuItems(menuItems.filter((item) => resolveMenuItemId(item) !== itemId));
       await loadExistingMenu();
     } catch (err) {

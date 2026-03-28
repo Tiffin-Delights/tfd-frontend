@@ -8,18 +8,46 @@ function ProviderPhotosModal({ auth, isOpen, onClose, onUploadSuccess }) {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+  const token = auth?.token;
 
   useEffect(() => {
-    if (isOpen && auth?.token) {
-      fetchPhotos();
+    if (!isOpen || !token) {
+      return undefined;
     }
-  }, [isOpen, auth?.token]);
 
-  const fetchPhotos = async () => {
+    let cancelled = false;
+
+    async function loadPhotosOnOpen() {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await getProviderPhotos(token);
+        if (!cancelled) {
+          setPhotos(Array.isArray(data) ? data : []);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err.message || "Failed to load photos");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadPhotosOnOpen();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, token]);
+
+  const refreshPhotos = async () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await getProviderPhotos(auth.token);
+      const data = await getProviderPhotos(token);
       setPhotos(Array.isArray(data) ? data : []);
     } catch (err) {
       setError(err.message || "Failed to load photos");
@@ -35,9 +63,9 @@ function ProviderPhotosModal({ auth, isOpen, onClose, onUploadSuccess }) {
     try {
       setSaving(true);
       setError(null);
-      await uploadProviderPhotos(auth.token, selectedFiles);
+      await uploadProviderPhotos(token, selectedFiles);
       setSelectedFiles([]);
-      await fetchPhotos();
+      await refreshPhotos();
       onUploadSuccess?.();
     } catch (err) {
       setError(err.message || "Failed to upload photos");
@@ -48,8 +76,8 @@ function ProviderPhotosModal({ auth, isOpen, onClose, onUploadSuccess }) {
 
   const handleDelete = async (photoId) => {
     try {
-      await deleteProviderPhoto(auth.token, photoId);
-      await fetchPhotos();
+      await deleteProviderPhoto(token, photoId);
+      await refreshPhotos();
       onUploadSuccess?.();
     } catch (err) {
       setError(err.message || "Failed to delete photo");

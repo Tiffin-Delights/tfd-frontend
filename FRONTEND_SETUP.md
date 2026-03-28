@@ -4,7 +4,7 @@ This guide helps you set up and run the frontend from scratch.
 
 ## 1. Prerequisites
 
-- Node.js 18+ (recommended: LTS)
+- Node.js matching `.nvmrc` (`22.12.0`) or any version supported by `package.json`
 - npm 9+
 - Git
 - Backend running locally (see `backend/BACKEND_SETUP.md`)
@@ -19,7 +19,7 @@ cd tfd-frontend
 ## 3. Install dependencies
 
 ```bash
-npm install
+npm ci
 ```
 
 ## 4. Configure environment
@@ -35,10 +35,18 @@ cp .env.example .env
 Default value:
 
 ```env
-VITE_API_BASE_URL=http://127.0.0.1:8000/api/v1
+VITE_API_BASE_URL=/api/v1
+VITE_API_PROXY_TARGET=http://127.0.0.1:8000
+VITE_LOCATIONIQ_KEY=
 ```
 
-If your backend runs on another port/host, update this value.
+The default setup works for local development:
+
+- frontend requests `/api` and `/uploads` from the Vite dev server
+- Vite proxies those requests to `VITE_API_PROXY_TARGET`
+
+If your backend runs on another port/host, update `VITE_API_PROXY_TARGET`.
+If you want the frontend to call a fully hosted backend directly, set `VITE_API_BASE_URL` to the full API URL instead.
 
 ## 5. Run in development mode
 
@@ -75,8 +83,9 @@ npm run lint
 ### Issue: API calls fail (network/CORS)
 
 - Confirm backend is running.
-- Confirm `VITE_API_BASE_URL` is correct.
-- Confirm backend `FRONTEND_ORIGIN` allows `http://localhost:5173`.
+- Confirm `VITE_API_PROXY_TARGET` points to the running backend in development.
+- If `VITE_API_BASE_URL` is absolute, confirm it is correct.
+- Confirm backend `FRONTEND_ORIGINS` allows your frontend URL.
 
 ### Issue: Blank page or runtime error in browser
 

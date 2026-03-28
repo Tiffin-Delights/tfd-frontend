@@ -1,8 +1,8 @@
 from pathlib import Path
-from typing import Annotated
+from typing import Any
 
-from pydantic import field_validator
-from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
+from pydantic import AliasChoices, Field, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
@@ -24,16 +24,19 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 1440
 
     razorpay_webhook_secret: str = "change_this_webhook_secret"
-    frontend_origins: Annotated[list[str], NoDecode] = [
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ]
+    frontend_origins: list[str] | str = Field(
+        default_factory=lambda: [
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+        ],
+        validation_alias=AliasChoices("FRONTEND_ORIGINS", "FRONTEND_ORIGIN"),
+    )
     uploads_dir: str = str(BACKEND_DIR / "uploads")
     meal_cancellation_cutoff_hour: int = 22
 
     @field_validator("frontend_origins", mode="before")
     @classmethod
-    def parse_frontend_origins(cls, value):
+    def parse_frontend_origins(cls, value: Any):
         if isinstance(value, str):
             return [origin.strip() for origin in value.split(",") if origin.strip()]
         return value

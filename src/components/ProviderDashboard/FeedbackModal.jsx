@@ -7,25 +7,40 @@ function FeedbackModal({ auth, isOpen, onClose }) {
   const [feedbacks, setFeedbacks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const token = auth?.token;
 
   useEffect(() => {
-    if (isOpen && auth?.token) {
-      fetchFeedback();
+    if (!isOpen || !token) {
+      return undefined;
     }
-  }, [isOpen, auth?.token]);
 
-  const fetchFeedback = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await getProviderFeedback(auth.token);
-      setFeedbacks(data);
-    } catch (err) {
-      setError(err.message || "Failed to load feedback");
-    } finally {
-      setLoading(false);
+    let cancelled = false;
+
+    async function loadFeedback() {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await getProviderFeedback(token);
+        if (!cancelled) {
+          setFeedbacks(data);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err.message || "Failed to load feedback");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
     }
-  };
+
+    loadFeedback();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, token]);
 
   if (!isOpen) return null;
 

@@ -30,7 +30,7 @@ DATABASE_URL=postgresql://YOUR_POSTGRES_USER:YOUR_POSTGRES_PASSWORD@localhost:54
 SECRET_KEY=change_this_secret_in_production
 ACCESS_TOKEN_EXPIRE_MINUTES=1440
 RAZORPAY_WEBHOOK_SECRET=change_this_webhook_secret
-FRONTEND_ORIGIN=http://localhost:5173
+FRONTEND_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
 ```
 
 When a teammate starts the backend with their own PostgreSQL credentials, the app will try to create the target database automatically if it does not already exist, and then create all tables automatically.
@@ -41,9 +41,10 @@ When a teammate starts the backend with their own PostgreSQL credentials, the ap
 cd backend
 python -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 cp .env.sample .env
-uvicorn app.main:app --reload --port 8000
+python -m uvicorn app.main:app --reload --port 8000
 ```
 
 This repo disables Python bytecode generation during local runs, so `__pycache__` and `.pyc` files should not be created.
@@ -60,7 +61,7 @@ If signup fails due to missing `users.phone` or `users.delivery_address`, run:
 
 ```bash
 cd backend
-/Users/nikhilverma/Desktop/Current_project/tfd-frontend/.venv/bin/python scripts/migrate_add_user_registration_fields.py
+python scripts/migrate_add_user_registration_fields.py
 ```
 
 ## API base

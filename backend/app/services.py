@@ -150,9 +150,35 @@ def provider_photo_folder(provider: Provider, user: User) -> Path:
     return folder
 
 
-def provider_photo_url(file_path: str) -> str:
+def _uploads_relative_path(file_path: str) -> Path:
+    candidate = Path(file_path)
     uploads_root = Path(settings.uploads_dir).resolve()
-    relative = Path(file_path).resolve().relative_to(uploads_root)
+
+    if not candidate.is_absolute():
+        return Path(str(candidate).lstrip("/"))
+
+    try:
+        return candidate.resolve().relative_to(uploads_root)
+    except ValueError:
+        parts = candidate.parts
+        if "uploads" in parts:
+            uploads_index = parts.index("uploads")
+            relative_parts = parts[uploads_index + 1 :]
+            if relative_parts:
+                return Path(*relative_parts)
+        return Path(candidate.name)
+
+
+def provider_photo_storage_path(file_path: str | Path) -> str:
+    return _uploads_relative_path(str(file_path)).as_posix()
+
+
+def provider_photo_local_path(file_path: str) -> Path:
+    return Path(settings.uploads_dir).resolve() / _uploads_relative_path(file_path)
+
+
+def provider_photo_url(file_path: str) -> str:
+    relative = _uploads_relative_path(file_path)
     return f"/uploads/{relative.as_posix()}"
 
 

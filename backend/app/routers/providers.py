@@ -32,7 +32,13 @@ from app.schemas import (
     ProviderPricingUpdateRequest,
     ProviderResponse,
 )
-from app.services import next_display_order, provider_photo_folder, provider_photo_url
+from app.services import (
+    next_display_order,
+    provider_photo_folder,
+    provider_photo_local_path,
+    provider_photo_storage_path,
+    provider_photo_url,
+)
 
 
 router = APIRouter(prefix="/providers", tags=["Providers"])
@@ -485,7 +491,7 @@ def upload_provider_photos(
 
         photo = ProviderPhoto(
             provider_id=provider.provider_id,
-            file_path=str(destination),
+            file_path=provider_photo_storage_path(destination),
             display_order=next_display_order(db, provider.provider_id) + len(created),
             is_primary=(existing_count == 0 and len(created) == 0),
         )
@@ -526,7 +532,7 @@ def delete_provider_photo(
     if not photo:
         raise HTTPException(status_code=404, detail="Photo not found")
 
-    file_path = Path(photo.file_path)
+    file_path = provider_photo_local_path(photo.file_path)
     if file_path.exists():
         file_path.unlink()
 

@@ -11,33 +11,46 @@ function SubscriptionPricingModal({ auth, isOpen, onClose, onUpdateSuccess, onPr
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const token = auth?.token;
 
   useEffect(() => {
-    if (isOpen) {
-      loadPricing();
+    if (!isOpen || !token) {
+      return undefined;
     }
-  }, [isOpen]);
 
-  const loadPricing = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await apiRequest("/providers/pricing", {
-        token: auth?.token,
-      });
-      if (response) {
-        setPricing({
-          weekly_price: response.weekly_price || "",
-          monthly_price: response.monthly_price || ""
+    let cancelled = false;
+
+    async function loadPricingOnOpen() {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await apiRequest("/providers/pricing", {
+          token,
         });
+        if (!cancelled && response) {
+          setPricing({
+            weekly_price: response.weekly_price || "",
+            monthly_price: response.monthly_price || ""
+          });
+        }
+      } catch (err) {
+        console.error("Failed to load pricing:", err);
+        if (!cancelled) {
+          setError("Could not load current pricing");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
-    } catch (err) {
-      console.error("Failed to load pricing:", err);
-      setError("Could not load current pricing");
-    } finally {
-      setLoading(false);
     }
-  };
+
+    loadPricingOnOpen();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, token]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -66,7 +79,7 @@ function SubscriptionPricingModal({ auth, isOpen, onClose, onUpdateSuccess, onPr
       setSubmitting(true);
       await apiRequest("/providers/pricing", {
         method: "PUT",
-        token: auth?.token,
+        token,
         body: {
           weekly_price: parseFloat(pricing.weekly_price),
           monthly_price: parseFloat(pricing.monthly_price)

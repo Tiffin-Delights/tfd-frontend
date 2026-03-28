@@ -6,25 +6,40 @@ function OrdersModal({ auth, isOpen, onClose }) {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const token = auth?.token;
 
   useEffect(() => {
-    if (isOpen && auth?.token) {
-      fetchOrders();
+    if (!isOpen || !token) {
+      return undefined;
     }
-  }, [isOpen, auth?.token]);
 
-  const fetchOrders = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await getProviderOrders(auth.token);
-      setOrders(data);
-    } catch (err) {
-      setError(err.message || "Failed to load orders");
-    } finally {
-      setLoading(false);
+    let cancelled = false;
+
+    async function loadOrders() {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await getProviderOrders(token);
+        if (!cancelled) {
+          setOrders(data);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err.message || "Failed to load orders");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
     }
-  };
+
+    loadOrders();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, token]);
 
   if (!isOpen) return null;
 
