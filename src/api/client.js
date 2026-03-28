@@ -21,9 +21,12 @@ async function parseResponse(response) {
 }
 
 export async function apiRequest(path, { method = "GET", token, body } = {}) {
-  const headers = {
-    "Content-Type": "application/json",
-  };
+  const headers = {};
+  const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
+
+  if (!isFormData) {
+    headers["Content-Type"] = "application/json";
+  }
 
   if (token) {
     headers.Authorization = `Bearer ${token}`;
@@ -32,7 +35,7 @@ export async function apiRequest(path, { method = "GET", token, body } = {}) {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     method,
     headers,
-    body: body ? JSON.stringify(body) : undefined,
+    body: body ? (isFormData ? body : JSON.stringify(body)) : undefined,
     cache: "no-store",
   });
 
@@ -108,8 +111,29 @@ export async function getMySubscriptions(token) {
   return apiRequest("/subscriptions/me", { token });
 }
 
+export async function getMySubscriptionMeals(token, subscriptionId) {
+  const query = subscriptionId ? `?subscription_id=${subscriptionId}` : "";
+  return apiRequest(`/subscriptions/meals/me${query}`, { token });
+}
+
 export async function createSubscription(token, payload) {
   return apiRequest("/subscriptions/manage", {
+    method: "POST",
+    token,
+    body: payload,
+  });
+}
+
+export async function createSubscriptionCheckout(token, payload) {
+  return apiRequest("/subscriptions/checkout", {
+    method: "POST",
+    token,
+    body: payload,
+  });
+}
+
+export async function cancelSubscriptionMeals(token, payload) {
+  return apiRequest("/subscriptions/meals/cancel", {
     method: "POST",
     token,
     body: payload,
@@ -130,6 +154,10 @@ export async function submitFeedback(token, payload) {
     token,
     body: payload,
   });
+}
+
+export async function getWallet(token) {
+  return apiRequest("/users/wallet", { token });
 }
 
 export async function uploadMenuDish(token, payload) {
@@ -170,5 +198,44 @@ export async function updateProviderLocation(token, payload) {
     method: "PUT",
     token,
     body: payload,
+  });
+}
+
+export async function createPayment(token, payload) {
+  return apiRequest("/payments/create", {
+    method: "POST",
+    token,
+    body: payload,
+  });
+}
+
+export async function verifyPayment(token, payload) {
+  return apiRequest("/payments/verify", {
+    method: "POST",
+    token,
+    body: payload,
+  });
+}
+
+export async function getProviderPhotos(token) {
+  return apiRequest("/providers/photos", { token });
+}
+
+export async function uploadProviderPhotos(token, files) {
+  const formData = new FormData();
+  files.forEach((file) => {
+    formData.append("files", file);
+  });
+  return apiRequest("/providers/photos", {
+    method: "POST",
+    token,
+    body: formData,
+  });
+}
+
+export async function deleteProviderPhoto(token, photoId) {
+  return apiRequest(`/providers/photos/${photoId}`, {
+    method: "DELETE",
+    token,
   });
 }

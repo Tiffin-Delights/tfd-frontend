@@ -6,6 +6,7 @@ import FeedbackModal from "./FeedbackModal";
 import MenuUploadModal from "./MenuUploadModal";
 import SubscriptionPricingModal from "./SubscriptionPricingModal";
 import ProviderLocationModal from "./ProviderLocationModal";
+import ProviderPhotosModal from "./ProviderPhotosModal";
 import "./ProviderDashboard.css";
 
 function ProviderDashboard({ auth }) {
@@ -95,7 +96,16 @@ function ProviderDashboard({ auth }) {
     );
   }
 
-  const { active_customers, total_orders, menu_items_count } = profileData;
+  const {
+    active_customers,
+    total_orders,
+    menu_items_count,
+    upcoming_breakfast_count,
+    upcoming_lunch_count,
+    upcoming_dinner_count,
+    cancelled_meals_count,
+    wallet_credit_issued,
+  } = profileData;
 
   return (
     <div className="provider-dashboard">
@@ -163,6 +173,18 @@ function ProviderDashboard({ auth }) {
             <div className="stat-label">Menu Items</div>
             <div className="stat-description">Items in your menu</div>
           </div>
+
+          <div className="stat-card">
+            <div className="stat-number">{upcoming_breakfast_count + upcoming_lunch_count + upcoming_dinner_count}</div>
+            <div className="stat-label">Next-Day Meals</div>
+            <div className="stat-description">Breakfast {upcoming_breakfast_count} · Lunch {upcoming_lunch_count} · Dinner {upcoming_dinner_count}</div>
+          </div>
+
+          <div className="stat-card">
+            <div className="stat-number">{cancelled_meals_count}</div>
+            <div className="stat-label">Meal Cancellations</div>
+            <div className="stat-description">Wallet credit issued ₹{Number(wallet_credit_issued || 0).toFixed(2)}</div>
+          </div>
         </div>
 
         <div className="quick-actions">
@@ -170,6 +192,7 @@ function ProviderDashboard({ auth }) {
           <div className="actions-grid">
             <button className="action-btn primary" onClick={() => setActiveModal("coverage")}>Set Delivery Area</button>
             <button className="action-btn primary" onClick={() => setActiveModal("menu")}>Upload Menu Items</button>
+            <button className="action-btn primary" onClick={() => setActiveModal("photos")}>Manage Photos</button>
             <button className="action-btn primary" onClick={() => setActiveModal("pricing")}>💰 Set Pricing</button>
             <button className="action-btn secondary" onClick={() => setActiveModal("orders")}>View Orders</button>
             <button className="action-btn secondary" onClick={() => setActiveModal("subscribers")}>Manage Subscribers</button>
@@ -191,6 +214,9 @@ function ProviderDashboard({ auth }) {
             </p>
             <p>
               Delivery coverage: <strong>{profileData.service_radius_km ? `${profileData.service_radius_km} km` : "not configured"}</strong>
+            </p>
+            <p>
+              Upcoming kitchen load: <strong>{upcoming_breakfast_count}</strong> breakfast, <strong>{upcoming_lunch_count}</strong> lunch, <strong>{upcoming_dinner_count}</strong> dinner.
             </p>
           </div>
         </div>
@@ -236,6 +262,12 @@ function ProviderDashboard({ auth }) {
           setActiveModal(null);
           fetchProviderProfile({ background: true });
         }}
+      />
+      <ProviderPhotosModal
+        auth={auth}
+        isOpen={activeModal === "photos"}
+        onClose={() => setActiveModal(null)}
+        onUploadSuccess={() => fetchProviderProfile({ background: true })}
       />
     </div>
   );

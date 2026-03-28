@@ -1,8 +1,16 @@
+from pathlib import Path
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+BACKEND_DIR = Path(__file__).resolve().parents[2]
+
+
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=str(BACKEND_DIR / ".env"),
+        extra="ignore",
+    )
 
     app_name: str = "Tiffin / Mess Subscription API"
     api_prefix: str = "/api/v1"
@@ -15,6 +23,7 @@ class Settings(BaseSettings):
 
     razorpay_webhook_secret: str = "change_this_webhook_secret"
     frontend_origin: str = "http://localhost:5173"
-
+    uploads_dir: str = str(BACKEND_DIR / "uploads")
+    meal_cancellation_cutoff_hour: int = 22
 
 settings = Settings()

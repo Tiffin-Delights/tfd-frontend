@@ -17,6 +17,52 @@ function MenuList({ title, items }) {
   );
 }
 
+const EMPTY_PHOTOS = [];
+
+function ProviderGallery({ provider }) {
+  const photos = Array.isArray(provider?.photo_urls) ? provider.photo_urls : EMPTY_PHOTOS;
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    if (photos.length <= 1) {
+      return undefined;
+    }
+
+    const interval = window.setInterval(() => {
+      setActiveIndex((current) => (current + 1) % photos.length);
+    }, 2400);
+
+    return () => window.clearInterval(interval);
+  }, [photos.length, provider?.provider_id]);
+
+  if (photos.length === 0) {
+    return (
+      <div className="provider-gallery provider-gallery--empty">
+        <span>No photos yet</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="provider-gallery">
+      <img src={photos[activeIndex]} alt={`${provider.mess_name} preview`} />
+      {photos.length > 1 && (
+        <div className="provider-gallery__dots">
+          {photos.map((photoUrl, index) => (
+            <button
+              key={photoUrl}
+              type="button"
+              className={index === activeIndex ? "is-active" : ""}
+              onClick={() => setActiveIndex(index)}
+              aria-label={`Show photo ${index + 1}`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function MessProviders({ auth, onSubscriptionCreated, onAuthUserUpdate, dietTheme = "nonveg" }) {
   const [selectedProvider, setSelectedProvider] = useState(null);
   const [providers, setProviders] = useState([]);
@@ -235,6 +281,7 @@ function MessProviders({ auth, onSubscriptionCreated, onAuthUserUpdate, dietThem
 
           {providers.map((provider) => (
             <article className="provider-card" key={provider.provider_id}>
+              <ProviderGallery provider={provider} />
               <h3>{provider.mess_name}</h3>
               <p>
                 <strong>Location:</strong> {provider.city}

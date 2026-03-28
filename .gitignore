@@ -11,16 +11,21 @@ lerna-debug.log*
 .env
 .env.*
 !.env.example
+!.env.sample
 
 # Local Python virtual environments
 .venv/
 venv/
 env/
+.python-version
 
 node_modules
 dist
 dist-ssr
+.vite/
 *.local
+coverage/
+build/
 
 # Python cache and build artifacts
 __pycache__/
@@ -32,10 +37,17 @@ __pycache__/
 .coverage
 .coverage.*
 htmlcov/
+.tox/
+.nox/
+.eggs/
+*.egg-info/
+pip-wheel-metadata/
 
 # Backend runtime and database artifacts
 backend/.env
 backend/.env.*
+!backend/.env.sample
+backend/.local/
 backend/*.db
 backend/*.sqlite
 backend/*.sqlite3
@@ -48,6 +60,7 @@ backend/*.sqlite3
 !.vscode/extensions.json
 .idea
 .DS_Store
+.envrc
 *.suo
 *.ntvs*
 *.njsproj

@@ -9,9 +9,11 @@ from app.models import (
     MealType,
     OrderType,
     PaymentStatus,
+    SubscriptionMealStatus,
     SubscriptionPlan,
     SubscriptionStatus,
     UserRole,
+    WalletTransactionType,
 )
 
 
@@ -52,6 +54,7 @@ class UserResponse(BaseModel):
     current_latitude: Decimal | None
     current_longitude: Decimal | None
     delivery_address: str | None
+    wallet_balance: Decimal = Decimal("0.00")
 
 
 class LoginRequest(BaseModel):
@@ -95,6 +98,18 @@ class ProviderResponse(BaseModel):
     weekly_price: Decimal
     monthly_price: Decimal
     distance_km: Decimal | None = None
+    photo_urls: list[str] = []
+
+
+class ProviderPhotoResponse(BaseModel):
+    class Config:
+        from_attributes = True
+
+    photo_id: int
+    photo_url: str
+    display_order: int
+    is_primary: bool
+    created_at: datetime | None = None
 
 
 class ProviderPricingResponse(BaseModel):
@@ -169,6 +184,8 @@ class OrderResponse(BaseModel):
     start_date: date
     end_date: date | None
     total_amount: Decimal
+    payable_amount: Decimal | None = None
+    wallet_discount_amount: Decimal | None = None
 
 
 class OrderDetailResponse(OrderResponse):
@@ -204,6 +221,84 @@ class SubscriptionDetailResponse(SubscriptionResponse):
     customer_location: str | None = None
     duration_days: int | None = None
     created_at: datetime | None = None
+    latest_feedback_rating: int | None = None
+    latest_feedback_comment: str | None = None
+    latest_feedback_at: datetime | None = None
+    cancelled_meals_count: int | None = None
+    wallet_credit_generated: Decimal | None = None
+
+
+class WalletTransactionResponse(BaseModel):
+    class Config:
+        from_attributes = True
+
+    wallet_transaction_id: int
+    transaction_type: WalletTransactionType
+    amount: Decimal
+    source_type: str | None = None
+    source_id: int | None = None
+    note: str | None = None
+    created_at: datetime
+
+
+class WalletSummaryResponse(BaseModel):
+    balance: Decimal
+    transactions: list[WalletTransactionResponse]
+
+
+class SubscriptionMealResponse(BaseModel):
+    class Config:
+        from_attributes = True
+
+    subscription_meal_id: int
+    subscription_id: int
+    provider_id: int
+    user_id: int
+    service_date: date
+    meal_type: MealType
+    unit_price: Decimal
+    status: SubscriptionMealStatus
+    cutoff_at: datetime
+    cancelled_at: datetime | None = None
+
+
+class SubscriptionCheckoutRequest(BaseModel):
+    provider_id: int
+    plan_type: SubscriptionPlan
+    start_date: date
+
+
+class SubscriptionCheckoutResponse(BaseModel):
+    order_id: int
+    provider_id: int
+    plan_type: SubscriptionPlan
+    start_date: date
+    end_date: date
+    total_amount: Decimal
+    wallet_balance_used: Decimal
+    payable_amount: Decimal
+
+
+class SubscriptionMealCancelRequest(BaseModel):
+    subscription_meal_ids: list[int] = Field(min_length=1)
+
+
+class SubscriptionMealCancelResponse(BaseModel):
+    cancelled_meals: list[SubscriptionMealResponse]
+    wallet_balance: Decimal
+    credited_amount: Decimal
+
+
+class PaymentCreateRequest(BaseModel):
+    order_id: int
+    payment_gateway: Literal["tfd_direct"] = "tfd_direct"
+
+
+class PaymentCreateResponse(BaseModel):
+    order_id: int
+    transaction_id: str
+    amount: Decimal
+    payment_gateway: str
 
 
 class PaymentVerifyRequest(BaseModel):
@@ -211,7 +306,7 @@ class PaymentVerifyRequest(BaseModel):
     amount: Decimal = Field(gt=0)
     status: PaymentStatus
     transaction_id: str = Field(min_length=5, max_length=255)
-    payment_gateway: Literal["razorpay"] = "razorpay"
+    payment_gateway: Literal["razorpay", "tfd_direct"] = "razorpay"
     razorpay_signature: str | None = None
 
 
@@ -226,6 +321,32 @@ class PaymentResponse(BaseModel):
     status: PaymentStatus
     payment_gateway: str
     transaction_id: str
+
+
+class ProviderDashboardResponse(BaseModel):
+    provider_id: int
+    owner_user_id: int
+    owner_name: str
+    mess_name: str
+    city: str
+    contact: str
+    service_address_text: str | None = None
+    service_place_id: str | None = None
+    service_latitude: Decimal | None = None
+    service_longitude: Decimal | None = None
+    service_radius_km: Decimal | None = None
+    rating: Decimal
+    created_at: str | None = None
+    active_customers: int
+    total_orders: int
+    menu_items_count: int
+    next_service_date: date | None = None
+    upcoming_breakfast_count: int = 0
+    upcoming_lunch_count: int = 0
+    upcoming_dinner_count: int = 0
+    cancelled_meals_count: int = 0
+    wallet_credit_issued: Decimal = Decimal("0.00")
+    photos: list[ProviderPhotoResponse] = []
 
 
 class FeedbackSubmitRequest(BaseModel):

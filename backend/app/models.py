@@ -67,6 +67,17 @@ class SubscriptionStatus(str, Enum):
     expired = "expired"
 
 
+class SubscriptionMealStatus(str, Enum):
+    scheduled = "scheduled"
+    cancelled = "cancelled"
+    consumed = "consumed"
+
+
+class WalletTransactionType(str, Enum):
+    credit = "credit"
+    debit = "debit"
+
+
 class User(Base):
     __tablename__ = "users"
 
@@ -92,6 +103,7 @@ class User(Base):
     provider_profile: Mapped["Provider | None"] = relationship(
         back_populates="owner", uselist=False
     )
+    wallet: Mapped["Wallet | None"] = relationship(back_populates="user", uselist=False)
 
 
 class Provider(Base):
@@ -119,6 +131,9 @@ class Provider(Base):
 
     owner: Mapped[User] = relationship(back_populates="provider_profile")
     menu_items: Mapped[list["MenuItem"]] = relationship(back_populates="provider")
+    photos: Mapped[list["ProviderPhoto"]] = relationship(
+        back_populates="provider", cascade="all, delete-orphan"
+    )
 
 
 class MenuItem(Base):
@@ -186,6 +201,9 @@ class Subscription(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
+    meals: Mapped[list["SubscriptionMeal"]] = relationship(
+        back_populates="subscription", cascade="all, delete-orphan"
+    )
 
 
 class Payment(Base):
@@ -229,8 +247,122 @@ class Feedback(Base):
     )
 
 
+class Wallet(Base):
+    __tablename__ = "wallets"
+
+    wallet_id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.user_id", ondelete="CASCADE"), unique=True, nullable=False, index=True
+    )
+    balance: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False, server_default="0")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+    user: Mapped[User] = relationship(back_populates="wallet")
+    transactions: Mapped[list["WalletTransaction"]] = relationship(
+        back_populates="wallet", cascade="all, delete-orphan"
+    )
+
+    __table_args__ = (
+        CheckConstraint("balance >= 0", name="chk_wallet_balance_non_negative"),
+    )
+
+
+class WalletTransaction(Base):
+    __tablename__ = "wallet_transactions"
+
+    wallet_transaction_id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    wallet_id: Mapped[int] = mapped_column(
+        ForeignKey("wallets.wallet_id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    transaction_type: Mapped[WalletTransactionType] = mapped_column(
+        SqlEnum(WalletTransactionType), nullable=False
+    )
+    amount: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
+    source_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    source_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    wallet: Mapped[Wallet] = relationship(back_populates="transactions")
+
+
+class SubscriptionMeal(Base):
+    __tablename__ = "subscription_meals"
+
+    subscription_meal_id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    subscription_id: Mapped[int] = mapped_column(
+        ForeignKey("subscriptions.subscription_id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    provider_id: Mapped[int] = mapped_column(
+        ForeignKey("providers.provider_id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    service_date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
+    meal_type: Mapped[MealType] = mapped_column(SqlEnum(MealType), nullable=False)
+    unit_price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
+    status: Mapped[SubscriptionMealStatus] = mapped_column(
+        SqlEnum(SubscriptionMealStatus),
+        nullable=False,
+        server_default=SubscriptionMealStatus.scheduled.value,
+        index=True,
+    )
+    cancelled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    cutoff_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    subscription: Mapped[Subscription] = relationship(back_populates="meals")
+
+    __table_args__ = (
+        Index(
+            "idx_subscription_meal_unique",
+            "subscription_id",
+            "service_date",
+            "meal_type",
+            unique=True,
+        ),
+    )
+
+
+class ProviderPhoto(Base):
+    __tablename__ = "provider_photos"
+
+    photo_id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    provider_id: Mapped[int] = mapped_column(
+        ForeignKey("providers.provider_id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    file_path: Mapped[str] = mapped_column(String(500), nullable=False)
+    display_order: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    is_primary: Mapped[bool] = mapped_column(nullable=False, default=False, server_default="false")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    provider: Mapped[Provider] = relationship(back_populates="photos")
+
+
 Index("idx_orders_user_provider", Order.user_id, Order.provider_id)
 Index("idx_subscriptions_user_provider", Subscription.user_id, Subscription.provider_id)
 Index("idx_users_role_location", User.role, User.location)
 Index("idx_users_geo_coords", User.current_latitude, User.current_longitude)
 Index("idx_providers_geo_coords", Provider.service_latitude, Provider.service_longitude)
+Index("idx_wallet_transactions_user_created", WalletTransaction.user_id, WalletTransaction.created_at)
+Index(
+    "idx_subscription_meals_provider_date_status",
+    SubscriptionMeal.provider_id,
+    SubscriptionMeal.service_date,
+    SubscriptionMeal.status,
+)

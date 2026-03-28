@@ -1,14 +1,22 @@
+from contextlib import asynccontextmanager
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
-from app.db import Base, engine
 from app.routers import auth, feedback, menu, orders, payments, providers, subscriptions, users
+from app.db import init_db
 
 
-Base.metadata.create_all(bind=engine)
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    init_db()
+    yield
 
-app = FastAPI(title=settings.app_name)
+
+app = FastAPI(title=settings.app_name, lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -22,6 +30,11 @@ app.add_middleware(
 @app.get("/")
 def root():
     return {"message": "Tiffin backend is running"}
+
+
+uploads_dir = Path(settings.uploads_dir)
+uploads_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=str(uploads_dir)), name="uploads")
 
 
 app.include_router(auth.router, prefix=settings.api_prefix)
