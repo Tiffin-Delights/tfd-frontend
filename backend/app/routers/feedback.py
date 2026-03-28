@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.db import get_db
-from app.deps import require_roles
+from app.deps import get_current_user, require_roles
 from app.models import Feedback, Order, Provider, Subscription, User, UserRole
 from app.schemas import FeedbackDetailResponse, FeedbackResponse, FeedbackSubmitRequest
 
@@ -26,6 +26,9 @@ def _resolve_provider(
         ):
             raise HTTPException(status_code=403, detail="Access denied for this provider")
         return provider
+
+    if current_user.role == UserRole.customer:
+        raise HTTPException(status_code=400, detail="provider_id is required")
 
     provider = (
         db.query(Provider)
@@ -113,7 +116,7 @@ def submit_feedback(
 def list_provider_feedback(
     provider_id: int | None = Query(default=None),
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_roles(UserRole.provider.value, UserRole.admin.value)),
+    current_user: User = Depends(get_current_user),
 ):
     provider = _resolve_provider(db, current_user, provider_id)
 
