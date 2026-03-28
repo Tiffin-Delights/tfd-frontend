@@ -221,7 +221,7 @@ class SubscriptionDetailResponse(SubscriptionResponse):
     customer_location: str | None = None
     duration_days: int | None = None
     created_at: datetime | None = None
-    latest_feedback_rating: int | None = None
+    latest_feedback_rating: Decimal | None = None
     latest_feedback_comment: str | None = None
     latest_feedback_at: datetime | None = None
     cancelled_meals_count: int | None = None
@@ -351,7 +351,7 @@ class ProviderDashboardResponse(BaseModel):
 
 class FeedbackSubmitRequest(BaseModel):
     provider_id: int
-    rating: int = Field(ge=1, le=5)
+    rating: Decimal = Field(ge=Decimal("1"), le=Decimal("5"), multiple_of=Decimal("0.5"))
     comment: str | None = Field(default=None, max_length=2000)
 
 
@@ -362,7 +362,7 @@ class FeedbackResponse(BaseModel):
     feedback_id: int
     user_id: int
     provider_id: int
-    rating: int
+    rating: Decimal
     comment: str | None
     created_at: datetime
 

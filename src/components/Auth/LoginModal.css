@@ -194,6 +194,44 @@
   min-height: 88px;
 }
 
+.password-field {
+  position: relative;
+}
+
+.password-field input {
+  width: 100%;
+  padding-right: 78px;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  border: none;
+  background: none;
+  color: var(--text-accent);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 999px;
+}
+
+.password-toggle:hover {
+  background: color-mix(in srgb, var(--text-accent) 10%, #ffffff);
+}
+
+.password-toggle:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--text-accent) 34%, transparent);
+  outline-offset: 2px;
+}
+
 .form-hint {
   margin: 2px 0 0;
   font-size: 0.76rem;

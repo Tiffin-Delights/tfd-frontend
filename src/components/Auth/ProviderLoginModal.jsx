@@ -2,6 +2,7 @@ import { useState } from "react";
 import "./LoginModal.css";
 import { loginUser } from "../../api/client";
 import { validateLoginForm } from "./authValidation";
+import PasswordField from "./PasswordField";
 
 function ProviderLoginModal({ onBack, onClose, onLoginSuccess, onSwitchToSignup }) {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -77,21 +78,18 @@ function ProviderLoginModal({ onBack, onClose, onLoginSuccess, onSwitchToSignup 
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="prov-password">Password</label>
-            <input
-              id="prov-password"
-              name="password"
-              type="password"
-              placeholder="Enter your password"
-              value={form.password}
-              onChange={handleChange}
-              autoComplete="current-password"
-              minLength={6}
-              required
-            />
-            <p className="form-hint">Password must be at least 6 characters.</p>
-          </div>
+          <PasswordField
+            id="prov-password"
+            name="password"
+            label="Password"
+            placeholder="Enter your password"
+            value={form.password}
+            onChange={handleChange}
+            autoComplete="current-password"
+            minLength={6}
+            hint="Password must be at least 6 characters."
+            required
+          />
 
           {error && <p className="modal-error">{error}</p>}
 

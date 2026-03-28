@@ -6,9 +6,9 @@
 
 .pricing-info {
   background: var(--panel-muted-bg);
-  padding: 15px;
+  padding: 5px;
   border-radius: 12px;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   font-size: 0.95rem;
   color: var(--text-body);
   border-left: 4px solid var(--text-accent);

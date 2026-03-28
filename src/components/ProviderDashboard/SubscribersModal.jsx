@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { getProviderSubscriptions } from "../../api/client";
+import StarRating from "../common/StarRating";
 import "./SubscribersModal.css";
 
 function SubscribersModal({ auth, isOpen, onClose }) {
@@ -111,7 +112,13 @@ function SubscribersModal({ auth, isOpen, onClose }) {
                       </div>
                       <div className="detail-row">
                         <span>Latest Rating:</span>
-                        <strong>{sub.latest_feedback_rating ? `⭐ ${sub.latest_feedback_rating}` : "-"}</strong>
+                        <strong>
+                          {sub.latest_feedback_rating ? (
+                            <StarRating value={sub.latest_feedback_rating} size="sm" showValue />
+                          ) : (
+                            "-"
+                          )}
+                        </strong>
                       </div>
                       <div className="detail-row">
                         <span>Feedback:</span>

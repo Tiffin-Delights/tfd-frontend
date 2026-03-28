@@ -246,11 +246,12 @@
 .login-btn:hover {
   transform: translateY(-1px);
   color: var(--header-hover);
-  box-shadow: 0 14px 30px rgba(19, 66, 34, 0.24);
+  box-shadow: 0 14px 30px rgba(125, 47, 55, 0.28);
 }
 
 .login-btn:hover .login-btn__content {
-  background: linear-gradient(135deg, #f7d96c, #4fa764);
+  background: linear-gradient(135deg, var(--snake-ring-accent), var(--snake-hover-start));
+  color: #fffdf8;
 }
 
 .login-btn:focus-visible {

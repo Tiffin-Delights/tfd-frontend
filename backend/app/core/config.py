@@ -1,8 +1,8 @@
 from pathlib import Path
+from typing import Annotated
 
 from pydantic import field_validator
-
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 1440
 
     razorpay_webhook_secret: str = "change_this_webhook_secret"
-    frontend_origins: list[str] = [
+    frontend_origins: Annotated[list[str], NoDecode] = [
         "http://localhost:5173",
         "http://127.0.0.1:5173",
     ]

@@ -63,7 +63,7 @@
   background: var(--panel-card-bg);
   border: 1px solid var(--panel-card-border);
   border-radius: 18px;
-  padding: 20px;
+  padding: 10px;
   box-shadow: var(--shadow-soft);
   display: flex;
   flex-direction: column;
@@ -81,6 +81,20 @@
   margin-bottom: 10px;
   color: var(--text-accent);
   font-size: 1.15rem;
+}
+
+.provider-card__content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+.provider-card__meta {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: space-evenly;
+  gap: 8px;
 }
 
 .provider-gallery {
@@ -131,20 +145,22 @@
 }
 
 .provider-card p {
-  margin: 7px 0;
+  margin: 0;
   color: var(--text-body);
   flex-grow: 0;
 }
 
 .pricing-info {
-  margin-top: 12px;
+  height: fit-content;
+  margin-top: 10px;
+  margin-bottom: 5px;
   padding-top: 12px;
   border-top: 1px solid var(--panel-card-border);
-  flex-grow: 1;
+  flex-grow: 0;
 }
 
 .pricing-info p {
-  margin: 6px 0;
+  margin: 1px 0;
   font-size: 0.92rem;
   font-weight: 500;
   color: var(--text-accent);
@@ -158,7 +174,7 @@
 .mess-providers .card-actions {
   display: flex;
   gap: 8px;
-  margin-top: auto;
+  margin-top: 0;
   padding-top: 12px;
   border-top: 1px solid var(--panel-card-border);
 }

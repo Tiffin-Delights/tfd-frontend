@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { getProviderFeedback } from "../../api/client";
+import StarRating from "../common/StarRating";
 import "./FeedbackModal.css";
 
 function FeedbackModal({ auth, isOpen, onClose }) {
@@ -29,13 +30,8 @@ function FeedbackModal({ auth, isOpen, onClose }) {
   if (!isOpen) return null;
 
   const averageRating = feedbacks.length > 0
-    ? (feedbacks.reduce((sum, f) => sum + f.rating, 0) / feedbacks.length).toFixed(1)
+    ? (feedbacks.reduce((sum, f) => sum + Number(f.rating || 0), 0) / feedbacks.length).toFixed(1)
     : "0.0";
-
-  const renderStars = (rating) => {
-    const value = Math.round(rating);
-    return "⭐".repeat(value) + "☆".repeat(5 - value);
-  };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -54,7 +50,9 @@ function FeedbackModal({ auth, isOpen, onClose }) {
             <div className="feedback-summary">
               <div className="average-rating">
                 <div className="rating-number">{averageRating}</div>
-                <div className="rating-stars">{renderStars(Math.round(averageRating))}</div>
+                <div className="rating-stars">
+                  <StarRating value={averageRating} size="md" showValue />
+                </div>
                 <div className="total-reviews">({feedbacks.length} reviews)</div>
               </div>
             </div>
@@ -73,7 +71,7 @@ function FeedbackModal({ auth, isOpen, onClose }) {
                         </p>
                       </div>
                       <div className="feedback-rating">
-                        {renderStars(feedback.rating)}
+                        <StarRating value={feedback.rating} size="sm" showValue />
                       </div>
                     </div>
                     <div className="feedback-comment">
