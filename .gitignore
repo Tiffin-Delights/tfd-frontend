@@ -66,3 +66,6 @@ backend/*.sqlite3
 *.njsproj
 *.sln
 *.sw?
+
+__pycache__/
+*.pyc
