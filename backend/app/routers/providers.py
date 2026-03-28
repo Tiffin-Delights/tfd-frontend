@@ -167,31 +167,10 @@ def create_provider(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_roles(UserRole.provider.value, UserRole.admin.value)),
 ):
-    if current_user.role == UserRole.provider:
-        existing = (
-            db.query(Provider).filter(Provider.owner_user_id == current_user.user_id).first()
-        )
-        if existing:
-            raise HTTPException(status_code=409, detail="Provider profile already exists")
-
-        provider = Provider(
-            owner_user_id=current_user.user_id,
-            owner_name=payload.owner_name,
-            mess_name=payload.mess_name,
-            city=payload.city,
-            contact=payload.contact,
-            service_address_text=payload.service_address_text,
-            service_place_id=payload.service_place_id,
-            service_latitude=payload.service_latitude,
-            service_longitude=payload.service_longitude,
-            service_radius_km=payload.service_radius_km,
-        )
-        db.add(provider)
-        db.commit()
-        db.refresh(provider)
-        return _serialize_provider(provider, provider.rating)
-
-    raise HTTPException(status_code=400, detail="Admin provider creation is not enabled")
+    raise HTTPException(
+        status_code=status.HTTP_410_GONE,
+        detail="Deprecated endpoint. Provider profiles are created during provider registration via /auth/register.",
+    )
 
 
 @router.get("", response_model=list[ProviderResponse])

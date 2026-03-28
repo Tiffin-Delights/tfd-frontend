@@ -4,7 +4,7 @@ import { loginUser } from "../../api/client";
 import { validateLoginForm } from "./authValidation";
 import PasswordField from "./PasswordField";
 
-function ProviderLoginModal({ onBack, onClose, onLoginSuccess, onSwitchToSignup }) {
+function ProviderLoginModal({ onBack, onClose, onLoginSuccess, onSwitchToSignup, onForgotPassword }) {
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -99,6 +99,12 @@ function ProviderLoginModal({ onBack, onClose, onLoginSuccess, onSwitchToSignup 
         </form>
 
         <hr className="modal-divider" />
+        <p className="modal-footnote">
+          Forgot your password?{" "}
+          <button type="button" className="modal-link" onClick={onForgotPassword}>
+            Reset it
+          </button>
+        </p>
         <p className="modal-footnote">
           New provider?{" "}
           <button type="button" className="modal-link" onClick={onSwitchToSignup}>

@@ -168,6 +168,7 @@
 }
 
 .form-group input,
+.form-group select,
 .form-group textarea {
   padding: 11px 14px;
   border: 1.5px solid var(--panel-card-border);
@@ -180,11 +181,13 @@
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 .form-group input:focus,
+.form-group select:focus,
 .form-group textarea:focus {
   border-color: color-mix(in srgb, var(--text-accent) 45%, transparent);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--text-accent) 16%, transparent);
 }
 .form-group input::placeholder,
+.form-group select::placeholder,
 .form-group textarea::placeholder {
   color: color-mix(in srgb, var(--text-muted) 72%, #c9c9c9);
 }
@@ -272,6 +275,13 @@
 .modal-error {
   margin: 2px 0 0;
   color: var(--state-danger-text);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.modal-success {
+  margin: 2px 0 0;
+  color: var(--state-success-text);
   font-size: 0.82rem;
   font-weight: 600;
 }

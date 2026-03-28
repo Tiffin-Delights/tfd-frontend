@@ -62,6 +62,41 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class PasswordResetOtpRequest(BaseModel):
+    channel: Literal["email", "phone"]
+    email: EmailStr | None = None
+    phone: str | None = Field(default=None, min_length=8, max_length=20)
+
+
+class PasswordResetOtpResponse(BaseModel):
+    message: str
+    challenge_id: str
+    expires_in_minutes: int
+    resend_after_seconds: int
+    account_email_hint: str | None = None
+    account_login_email: EmailStr | None = None
+
+
+class PasswordResetOtpConfirmRequest(BaseModel):
+    challenge_id: str = Field(min_length=20, max_length=255)
+    otp: str = Field(min_length=4, max_length=8)
+    new_password: str = Field(min_length=6, max_length=128)
+
+
+class PasswordResetOtpConfirmResponse(BaseModel):
+    message: str
+    login_email: EmailStr | None = None
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str = Field(min_length=6, max_length=128)
+    new_password: str = Field(min_length=6, max_length=128)
+
+
+class MessageResponse(BaseModel):
+    message: str
+
+
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
