@@ -75,12 +75,14 @@ def register(payload: UserRegisterRequest, db: Session = Depends(get_db)):
 
 @router.post("/login", response_model=TokenResponse)
 def login(payload: LoginRequest, db: Session = Depends(get_db)):
+
     user = db.query(User).filter(User.email == payload.email).first()
     if not user or not verify_password(payload.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",
         )
+
 
     token = create_access_token(subject=str(user.user_id), role=user.role.value)
     return TokenResponse(access_token=token, user=user)
