@@ -344,9 +344,33 @@ class ProviderDashboardResponse(BaseModel):
     upcoming_breakfast_count: int = 0
     upcoming_lunch_count: int = 0
     upcoming_dinner_count: int = 0
+    cancelled_breakfast_count: int = 0
+    cancelled_lunch_count: int = 0
+    cancelled_dinner_count: int = 0
     cancelled_meals_count: int = 0
     wallet_credit_issued: Decimal = Decimal("0.00")
     photos: list[ProviderPhotoResponse] = []
+
+
+class ProviderInsightsTrendPoint(BaseModel):
+    date: date
+    new_customers_count: int = 0
+    not_renewed_count: int = 0
+
+
+class ProviderInsightsResponse(BaseModel):
+    range_key: str
+    start_date: date
+    end_date: date
+    orders_count: int = 0
+    active_subscribers_count: int = 0
+    new_customers_count: int = 0
+    not_renewed_count: int = 0
+    ended_plans_count: int = 0
+    renewed_count: int = 0
+    average_rating: Decimal = Decimal("0.0")
+    feedback_count: int = 0
+    daily_trend: list[ProviderInsightsTrendPoint] = []
 
 
 class FeedbackSubmitRequest(BaseModel):

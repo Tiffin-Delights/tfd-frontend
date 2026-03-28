@@ -88,6 +88,93 @@
   padding: 12px 24px;
 }
 
+.warning-message {
+  background: var(--state-warn-bg);
+  color: var(--state-warn-text);
+  border: 1px solid color-mix(in srgb, var(--state-warn-text) 24%, transparent);
+  margin: -24px -24px 0 -24px;
+  margin-bottom: 24px;
+  padding: 12px 24px;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.warning-message--blocked {
+  background: var(--state-danger-bg);
+  color: var(--state-danger-text);
+  border-color: color-mix(in srgb, var(--state-danger-text) 24%, transparent);
+}
+
+.subscribe-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.34);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1100;
+}
+
+.subscribe-confirm-dialog {
+  width: min(100%, 430px);
+  border-radius: 18px;
+  background: var(--panel-card-bg);
+  border: 1px solid var(--panel-card-border);
+  box-shadow: var(--shadow-panel);
+  padding: 24px;
+}
+
+.subscribe-confirm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+
+.subscribe-confirm-dialog h3 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 1.25rem;
+}
+
+.subscribe-confirm-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid color-mix(in srgb, var(--text-accent) 24%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--text-accent) 8%, #ffffff);
+  color: var(--text-accent);
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease;
+}
+
+.subscribe-confirm-close:hover {
+  background: color-mix(in srgb, var(--text-accent) 12%, #ffffff);
+  color: var(--text-strong);
+  transform: translateY(-1px);
+}
+
+.subscribe-confirm-dialog p {
+  margin: 0 0 10px;
+  color: var(--text-body);
+  line-height: 1.55;
+}
+
+.subscribe-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 18px;
+}
+
 /* Plan Selection */
 .plan-selection h3,
 .date-selection h3,

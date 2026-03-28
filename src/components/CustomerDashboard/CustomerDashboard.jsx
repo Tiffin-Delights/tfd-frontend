@@ -144,8 +144,9 @@ function CustomerDashboard({ auth, refreshKey = 0 }) {
     <div className="customer-dashboard">
       <div className="dashboard-container">
         <div className="dashboard-header">
-          <h1>My Dashboard</h1>
-          <p className="customer-name">Welcome, {profile.name}!</p>
+          <h1>
+          <span class="reveal-text">Welcome: {profile.name}. .</span>
+          </h1>
         </div>
 
         <div className="customer-info-card">
@@ -168,10 +169,7 @@ function CustomerDashboard({ auth, refreshKey = 0 }) {
                 <label>Location</label>
                 <p>{profile.location || "Not provided"}</p>
               </div>
-              <div className="info-item">
-                <label>Delivery Address</label>
-                <p>{profile.delivery_address || "Not provided"}</p>
-              </div>
+ 
             </div>
           </div>
         </div>
