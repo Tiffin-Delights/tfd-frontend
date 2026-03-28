@@ -23,6 +23,10 @@ def ensure_database_exists() -> None:
     if url.get_backend_name() != "postgresql":
         return
 
+    # Only auto-create databases for local development.
+    if url.host not in {None, "localhost", "127.0.0.1"}:
+        return
+
     target_database = url.database
     if not target_database:
         raise ValueError("DATABASE_URL must include a database name.")
@@ -54,6 +58,35 @@ def init_db() -> None:
 
     ensure_database_exists()
     Base.metadata.create_all(bind=engine)
+    ensure_feedback_rating_precision()
+
+
+def ensure_feedback_rating_precision() -> None:
+    if url.get_backend_name() != "postgresql":
+        return
+
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                """
+                ALTER TABLE feedback
+                ALTER COLUMN rating TYPE NUMERIC(2, 1)
+                USING rating::numeric(2, 1)
+                """
+            )
+        )
+        connection.execute(
+            text("ALTER TABLE feedback DROP CONSTRAINT IF EXISTS chk_feedback_rating_range")
+        )
+        connection.execute(
+            text(
+                """
+                ALTER TABLE feedback
+                ADD CONSTRAINT chk_feedback_rating_range
+                CHECK (rating BETWEEN 1 AND 5 AND mod(rating * 10, 5) = 0)
+                """
+            )
+        )
 
 
 def get_db():

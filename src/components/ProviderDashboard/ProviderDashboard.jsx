@@ -7,6 +7,7 @@ import MenuUploadModal from "./MenuUploadModal";
 import SubscriptionPricingModal from "./SubscriptionPricingModal";
 import ProviderLocationModal from "./ProviderLocationModal";
 import ProviderPhotosModal from "./ProviderPhotosModal";
+import StarRating from "../common/StarRating";
 import "./ProviderDashboard.css";
 
 function ProviderDashboard({ auth }) {
@@ -149,7 +150,9 @@ function ProviderDashboard({ auth }) {
               </div>
               <div className="info-item">
                 <label>Rating</label>
-                <p className="rating-badge">⭐ {profileData.rating || "No ratings yet"}</p>
+                <div className="rating-badge">
+                  <StarRating value={profileData.rating} size="md" showValue />
+                </div>
               </div>
             </div>
           </div>

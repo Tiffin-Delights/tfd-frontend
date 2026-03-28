@@ -7,6 +7,7 @@ import {
   getWallet,
   submitFeedback,
 } from "../../api/client";
+import StarRating from "../common/StarRating";
 import "./CustomerDashboard.css";
 
 function formatDate(value) {
@@ -49,7 +50,7 @@ function CustomerDashboard({ auth, refreshKey = 0 }) {
         const next = { ...current };
         (Array.isArray(subsResponse) ? subsResponse : []).forEach((sub) => {
           next[sub.subscription_id] = next[sub.subscription_id] || {
-            rating: String(sub.latest_feedback_rating || 5),
+            rating: String(sub.latest_feedback_rating ?? 5),
             comment: sub.latest_feedback_comment || "",
           };
         });
@@ -236,7 +237,7 @@ function CustomerDashboard({ auth, refreshKey = 0 }) {
                 const draft = feedbackDrafts[sub.subscription_id] || { rating: "5", comment: "" };
                 const upcomingMeals = (mealsBySubscription[sub.subscription_id] || [])
                   .filter((meal) => meal.status === "scheduled" || meal.status === "cancelled")
-                  .slice(0, 9);
+                  .slice(0, 3);
 
                 return (
                   <div key={sub.subscription_id} className="subscription-card active">
@@ -299,24 +300,21 @@ function CustomerDashboard({ auth, refreshKey = 0 }) {
                     <div className="feedback-editor">
                       <h4>Rate this provider</h4>
                       <div className="feedback-editor__row">
-                        <select
+                        <StarRating
                           value={draft.rating}
-                          onChange={(event) =>
+                          editable
+                          size="lg"
+                          showValue
+                          onChange={(value) =>
                             setFeedbackDrafts((current) => ({
                               ...current,
                               [sub.subscription_id]: {
                                 ...draft,
-                                rating: event.target.value,
+                                rating: String(value),
                               },
                             }))
                           }
-                        >
-                          {[5, 4, 3, 2, 1].map((value) => (
-                            <option key={value} value={value}>
-                              {value} Star{value > 1 ? "s" : ""}
-                            </option>
-                          ))}
-                        </select>
+                        />
                         <button
                           type="button"
                           className="action-btn reactivate"

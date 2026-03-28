@@ -235,14 +235,17 @@ class Feedback(Base):
     provider_id: Mapped[int] = mapped_column(
         ForeignKey("providers.provider_id", ondelete="CASCADE"), nullable=False, index=True
     )
-    rating: Mapped[int] = mapped_column(Integer, nullable=False)
+    rating: Mapped[Decimal] = mapped_column(Numeric(2, 1), nullable=False)
     comment: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
 
     __table_args__ = (
-        CheckConstraint("rating BETWEEN 1 AND 5", name="chk_feedback_rating_range"),
+        CheckConstraint(
+            "rating BETWEEN 1 AND 5 AND mod(rating * 10, 5) = 0",
+            name="chk_feedback_rating_range",
+        ),
         Index("idx_feedback_provider_created", "provider_id", "created_at"),
     )
 

@@ -1,4 +1,41 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000/api/v1";
+const API_ORIGIN = new URL(API_BASE_URL).origin;
+
+function resolveApiAssetUrl(value) {
+  if (!value || typeof value !== "string") {
+    return value;
+  }
+
+  if (/^https?:\/\//i.test(value)) {
+    return value;
+  }
+
+  return new URL(value, API_ORIGIN).toString();
+}
+
+function normalizeProvider(provider) {
+  if (!provider || typeof provider !== "object") {
+    return provider;
+  }
+
+  return {
+    ...provider,
+    photo_urls: Array.isArray(provider.photo_urls)
+      ? provider.photo_urls.map((photoUrl) => resolveApiAssetUrl(photoUrl))
+      : provider.photo_urls,
+  };
+}
+
+function normalizeProviderPhoto(photo) {
+  if (!photo || typeof photo !== "object") {
+    return photo;
+  }
+
+  return {
+    ...photo,
+    photo_url: resolveApiAssetUrl(photo.photo_url),
+  };
+}
 
 async function parseResponse(response) {
   const text = await response.text();
@@ -85,7 +122,8 @@ export async function listProviders(token, city, dietMode, customerLocation) {
   }
 
   const query = params.toString() ? `?${params.toString()}` : "";
-  return apiRequest(`/providers${query}`, { token });
+  const data = await apiRequest(`/providers${query}`, { token });
+  return Array.isArray(data) ? data.map(normalizeProvider) : [];
 }
 
 export async function getProviderMenu(token, providerId) {
@@ -218,7 +256,8 @@ export async function verifyPayment(token, payload) {
 }
 
 export async function getProviderPhotos(token) {
-  return apiRequest("/providers/photos", { token });
+  const data = await apiRequest("/providers/photos", { token });
+  return Array.isArray(data) ? data.map(normalizeProviderPhoto) : [];
 }
 
 export async function uploadProviderPhotos(token, files) {
@@ -226,11 +265,12 @@ export async function uploadProviderPhotos(token, files) {
   files.forEach((file) => {
     formData.append("files", file);
   });
-  return apiRequest("/providers/photos", {
+  const data = await apiRequest("/providers/photos", {
     method: "POST",
     token,
     body: formData,
   });
+  return Array.isArray(data) ? data.map(normalizeProviderPhoto) : [];
 }
 
 export async function deleteProviderPhoto(token, photoId) {

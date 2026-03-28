@@ -41,8 +41,8 @@
   --pill-bg: #134222;
   --header-bg: #e37434;
   --header-link: #fdf9f9;
-  --header-hover: #134222;
-  --header-underline: #1f7a4d;
+  --header-hover: #fff3da;
+  --header-underline: linear-gradient(90deg, #ffd29a, #e37434, #cf6228);
   --header-mobile-bg: #7d2f37;
   --footer-bg: linear-gradient(145deg, rgba(255, 249, 239, 0.98), rgba(255, 235, 199, 0.96));
   --footer-border: rgba(245, 196, 118, 0.2);

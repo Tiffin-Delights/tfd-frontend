@@ -3,6 +3,7 @@ import "./LoginModal.css";
 import { loginUser, registerUser } from "../../api/client";
 import { validateProviderSignupForm } from "./authValidation";
 import LocationPicker from "../Location/LocationPicker";
+import PasswordField from "./PasswordField";
 
 function ProviderSignupModal({ onBack, onClose, onSignupSuccess }) {
   const [form, setForm] = useState({
@@ -213,36 +214,30 @@ function ProviderSignupModal({ onBack, onClose, onSignupSuccess }) {
             <p className="form-hint">Customers inside this radius will see your service.</p>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="prov-signup-password">Password</label>
-            <input
-              id="prov-signup-password"
-              name="password"
-              type="password"
-              placeholder="Create a password"
-              value={form.password}
-              onChange={handleChange}
-              autoComplete="new-password"
-              minLength={6}
-              required
-            />
-            <p className="form-hint">At least 6 characters with letters and numbers.</p>
-          </div>
+          <PasswordField
+            id="prov-signup-password"
+            name="password"
+            label="Password"
+            placeholder="Create a password"
+            value={form.password}
+            onChange={handleChange}
+            autoComplete="new-password"
+            minLength={6}
+            hint="At least 6 characters with letters and numbers."
+            required
+          />
 
-          <div className="form-group">
-            <label htmlFor="prov-signup-confirm">Confirm Password</label>
-            <input
-              id="prov-signup-confirm"
-              name="confirmPassword"
-              type="password"
-              placeholder="Re-enter password"
-              value={form.confirmPassword}
-              onChange={handleChange}
-              autoComplete="new-password"
-              minLength={6}
-              required
-            />
-          </div>
+          <PasswordField
+            id="prov-signup-confirm"
+            name="confirmPassword"
+            label="Confirm Password"
+            placeholder="Re-enter password"
+            value={form.confirmPassword}
+            onChange={handleChange}
+            autoComplete="new-password"
+            minLength={6}
+            required
+          />
 
           {error && <p className="modal-error">{error}</p>}
 

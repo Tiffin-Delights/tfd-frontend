@@ -2,6 +2,7 @@ import { useState } from "react";
 import "./LoginModal.css";
 import { loginUser, registerUser } from "../../api/client";
 import { validateCustomerSignupForm } from "./authValidation";
+import PasswordField from "./PasswordField";
 
 function CustomerSignupModal({ onBack, onClose, onSignupSuccess }) {
   const [form, setForm] = useState({
@@ -118,36 +119,30 @@ function CustomerSignupModal({ onBack, onClose, onSignupSuccess }) {
             <p className="form-hint">Use a valid 10-digit phone number.</p>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="cust-signup-password">Password</label>
-            <input
-              id="cust-signup-password"
-              name="password"
-              type="password"
-              placeholder="Create a password"
-              value={form.password}
-              onChange={handleChange}
-              autoComplete="new-password"
-              minLength={6}
-              required
-            />
-            <p className="form-hint">At least 6 characters with letters and numbers.</p>
-          </div>
+          <PasswordField
+            id="cust-signup-password"
+            name="password"
+            label="Password"
+            placeholder="Create a password"
+            value={form.password}
+            onChange={handleChange}
+            autoComplete="new-password"
+            minLength={6}
+            hint="At least 6 characters with letters and numbers."
+            required
+          />
 
-          <div className="form-group">
-            <label htmlFor="cust-signup-confirm">Confirm Password</label>
-            <input
-              id="cust-signup-confirm"
-              name="confirmPassword"
-              type="password"
-              placeholder="Re-enter password"
-              value={form.confirmPassword}
-              onChange={handleChange}
-              autoComplete="new-password"
-              minLength={6}
-              required
-            />
-          </div>
+          <PasswordField
+            id="cust-signup-confirm"
+            name="confirmPassword"
+            label="Confirm Password"
+            placeholder="Re-enter password"
+            value={form.confirmPassword}
+            onChange={handleChange}
+            autoComplete="new-password"
+            minLength={6}
+            required
+          />
 
           {error && <p className="modal-error">{error}</p>}
 

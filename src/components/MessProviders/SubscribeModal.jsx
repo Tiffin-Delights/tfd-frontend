@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { createPayment, createSubscriptionCheckout, verifyPayment } from "../../api/client";
+import StarRating from "../common/StarRating";
 import "./SubscribeModal.css";
 
 function SubscribeModal({ auth, provider, isOpen, onClose, onSubscribeSuccess }) {
@@ -206,7 +207,7 @@ function SubscribeModal({ auth, provider, isOpen, onClose, onSubscribeSuccess })
             <p><strong>Service Address:</strong> {provider.service_address_text || "Not available"}</p>
             <p><strong>Delivery Radius:</strong> {provider.service_radius_km ? `${provider.service_radius_km} km` : "Not available"}</p>
             {provider.distance_km != null && <p><strong>Distance from you:</strong> {provider.distance_km} km</p>}
-            <p><strong>Rating:</strong> ⭐ {provider.rating || "No ratings yet"}</p>
+            <p><strong>Rating:</strong> <StarRating value={provider.rating} size="sm" showValue /></p>
             <p><strong>Contact:</strong> {provider.contact}</p>
           </div>
 

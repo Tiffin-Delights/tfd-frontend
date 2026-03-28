@@ -404,13 +404,19 @@
 
 .feedback-editor__row {
   display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
   gap: 10px;
   margin-bottom: 10px;
 }
 
-.feedback-editor select,
+.feedback-editor .star-rating,
 .feedback-editor textarea {
   width: 100%;
+}
+
+.feedback-editor textarea {
   border-radius: 12px;
   border: 1px solid var(--panel-card-border);
   background: #fffdf7;

@@ -3,6 +3,7 @@ import "./MessProviders.css";
 import { getProviderMenu, listProviders, updateUserLocation } from "../api/client";
 import SubscribeModal from "./MessProviders/SubscribeModal";
 import LocationPicker from "./Location/LocationPicker";
+import StarRating from "./common/StarRating";
 
 function MenuList({ title, items }) {
   return (
@@ -282,34 +283,24 @@ function MessProviders({ auth, onSubscriptionCreated, onAuthUserUpdate, dietThem
           {providers.map((provider) => (
             <article className="provider-card" key={provider.provider_id}>
               <ProviderGallery provider={provider} />
-              <h3>{provider.mess_name}</h3>
-              <p>
-                <strong>Location:</strong> {provider.city}
-              </p>
-              <p>
-                <strong>Service Address:</strong> {provider.service_address_text || "Not set"}
-              </p>
-              <p>
-                <strong>Radius:</strong> {provider.service_radius_km ? `${provider.service_radius_km} km` : "Not set"}
-              </p>
-              {provider.distance_km != null && (
-                <p>
-                  <strong>Distance:</strong> {provider.distance_km} km away
-                </p>
-              )}
-              <p>
-                <strong>Rating:</strong> {provider.rating}
-              </p>
-              <p>
-                <strong>Contact:</strong> {provider.contact}
-              </p>
-              <div className="pricing-info">
-                {provider.weekly_price > 0 && (
-                  <p><strong>Weekly:</strong> ₹{provider.weekly_price}/week</p>
-                )}
-                {provider.monthly_price > 0 && (
-                  <p><strong>Monthly:</strong> ₹{provider.monthly_price}/month</p>
-                )}
+              <div className="provider-card__content">
+                <h3>{provider.mess_name}</h3>
+                <div className="provider-card__meta">
+                  <p>
+                    <strong>Rating:</strong> <StarRating value={provider.rating} size="sm" showValue />
+                  </p>
+                  <p>
+                    <strong>Contact:</strong> {provider.contact}
+                  </p>
+                </div>
+                <div className="pricing-info">
+                  {provider.weekly_price > 0 && (
+                    <p><strong>Weekly:</strong> ₹{provider.weekly_price}/week</p>
+                  )}
+                  {provider.monthly_price > 0 && (
+                    <p><strong>Monthly:</strong> ₹{provider.monthly_price}/month</p>
+                  )}
+                </div>
               </div>
               <div className="card-actions">
                 <button
