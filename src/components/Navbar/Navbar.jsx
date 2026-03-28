@@ -1,8 +1,9 @@
 import "./Navbar.css";
 import loginIcon from "../../assets/Nav/login-icon.png";
 import logo from "../../assets/Nav/logo.png";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import LoginFlow from "../Auth/LoginFlow";
+import AccountModal from "./AccountModal";
 
 function MyNavbar({
   onLoginSuccess,
@@ -13,6 +14,9 @@ function MyNavbar({
 }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [auth, setAuth] = useState(parentAuth);
+  const [showAccountModal, setShowAccountModal] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const userMenuRef = useRef(null);
 
   useEffect(() => {
     setAuth(parentAuth);
@@ -29,6 +33,20 @@ function MyNavbar({
       setAuth(null);
     }
   }, [parentAuth]);
+
+  useEffect(() => {
+    const handleDocumentClick = (event) => {
+      if (!userMenuRef.current) {
+        return;
+      }
+      if (!userMenuRef.current.contains(event.target)) {
+        setShowUserMenu(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleDocumentClick);
+    return () => document.removeEventListener("mousedown", handleDocumentClick);
+  }, []);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -88,19 +106,42 @@ function MyNavbar({
           {auth?.token ? (
             <div className="auth-section">
               <span className="user-info">{auth?.user?.role === "provider" ? "Welcome" : "Welcome"} : {auth?.user?.name}</span>
-              <button
-                className="login-btn logout-btn"
-                onClick={handleLogout}
-                type="button"
-                aria-label="Logout"
-                data-tooltip="Log Out"
-              >
-                <span className="login-btn__border" aria-hidden="true" />
-                <span className="login-btn__content">
-                  <img src={loginIcon} alt="" className="login-icon" aria-hidden="true" />
-                  <span className="login-btn__text">Log Out</span>
-                </span>
-              </button>
+              <div className="user-menu" ref={userMenuRef}>
+                <button
+                  className="login-btn user-menu-trigger"
+                  onClick={() => setShowUserMenu((current) => !current)}
+                  type="button"
+                  aria-label="Open user menu"
+                  aria-expanded={showUserMenu}
+                >
+                  <span className="login-btn__border" aria-hidden="true" />
+                  <span className="login-btn__content">
+                    <img src={loginIcon} alt="" className="login-icon" aria-hidden="true" />
+                  </span>
+                </button>
+
+                {showUserMenu && (
+                  <div className="user-menu-dropdown" role="menu" aria-label="User menu">
+                    <button
+                      type="button"
+                      className="user-menu-item"
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        setShowAccountModal(true);
+                      }}
+                    >
+                      Change Password
+                    </button>
+                    <button
+                      type="button"
+                      className="user-menu-item"
+                      onClick={handleLogout}
+                    >
+                      Log Out
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           ) : (
             <LoginFlow
@@ -155,6 +196,12 @@ function MyNavbar({
           </div>
         </div>
       </nav>
+
+      <AccountModal
+        auth={auth}
+        isOpen={showAccountModal}
+        onClose={() => setShowAccountModal(false)}
+      />
     </header>
   );
 }

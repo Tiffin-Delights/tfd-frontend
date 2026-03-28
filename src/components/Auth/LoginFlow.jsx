@@ -4,6 +4,7 @@ import CustomerLoginModal from "./CustomerLoginModal";
 import ProviderLoginModal from "./ProviderLoginModal";
 import CustomerSignupModal from "./CustomerSignupModal";
 import ProviderSignupModal from "./ProviderSignupModal";
+import ForgotPasswordModal from "./ForgotPasswordModal";
 
 /**
  * LoginFlow
@@ -45,6 +46,7 @@ function LoginFlow({ children, onCustomerLoginSuccess, onProviderLoginSuccess })
           onClose={close}
           onLoginSuccess={onCustomerLoginSuccess}
           onSwitchToSignup={() => setStep("customer-signup")}
+          onForgotPassword={() => setStep("forgot-password")}
         />
       )}
 
@@ -55,6 +57,7 @@ function LoginFlow({ children, onCustomerLoginSuccess, onProviderLoginSuccess })
           onClose={close}
           onLoginSuccess={onProviderLoginSuccess}
           onSwitchToSignup={() => setStep("provider-signup")}
+          onForgotPassword={() => setStep("forgot-password")}
         />
       )}
 
@@ -73,6 +76,13 @@ function LoginFlow({ children, onCustomerLoginSuccess, onProviderLoginSuccess })
           onBack={() => setStep("provider-login")}
           onClose={close}
           onSignupSuccess={onProviderLoginSuccess}
+        />
+      )}
+
+      {step === "forgot-password" && (
+        <ForgotPasswordModal
+          onBack={() => setStep("select")}
+          onClose={close}
         />
       )}
     </>

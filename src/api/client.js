@@ -91,6 +91,20 @@ export async function loginUser(email, password) {
   });
 }
 
+export async function requestPasswordResetOtp(payload) {
+  return apiRequest("/auth/password-reset/request-otp", {
+    method: "POST",
+    body: payload,
+  });
+}
+
+export async function confirmPasswordResetOtp(payload) {
+  return apiRequest("/auth/password-reset/confirm", {
+    method: "POST",
+    body: payload,
+  });
+}
+
 export async function registerUser(payload) {
   return apiRequest("/auth/register", {
     method: "POST",
@@ -201,6 +215,14 @@ export async function submitFeedback(token, payload) {
 
 export async function getWallet(token) {
   return apiRequest("/users/wallet", { token });
+}
+
+export async function changePassword(token, payload) {
+  return apiRequest("/users/password", {
+    method: "PUT",
+    token,
+    body: payload,
+  });
 }
 
 export async function uploadMenuDish(token, payload) {

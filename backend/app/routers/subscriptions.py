@@ -110,25 +110,7 @@ def manage_subscription(
                 detail=f"Active {payload.plan_type.value.title()} subscription already exists from {existing_active.start_date} to {existing_active.end_date}. Please cancel it first.",
             )
 
-    subscription = (
-        db.query(Subscription)
-        .filter(
-            Subscription.user_id == current_user.user_id,
-            Subscription.provider_id == payload.provider_id,
-        )
-        .order_by(Subscription.subscription_id.desc())
-        .first()
-    )
-
-    if subscription:
-        subscription.plan_type = payload.plan_type
-        subscription.start_date = payload.start_date
-        subscription.end_date = payload.end_date
-        subscription.status = payload.status
-        db.commit()
-        db.refresh(subscription)
-        return subscription
-
+    # Always create a new subscription record to preserve history.
     new_subscription = Subscription(
         user_id=current_user.user_id,
         provider_id=payload.provider_id,

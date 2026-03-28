@@ -290,6 +290,52 @@
   color: #fffdf8;
 }
 
+.user-menu {
+  position: relative;
+}
+
+.user-menu-trigger {
+  min-width: 52px;
+  width: 52px;
+  min-height: 46px;
+}
+
+.user-menu-trigger .login-btn__content {
+  width: 100%;
+  justify-content: center;
+  padding: 12px;
+}
+
+.user-menu-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  display: flex;
+  flex-direction: column;
+  min-width: 170px;
+  border-radius: 12px;
+  border: 1px solid var(--panel-card-border);
+  background: var(--panel-card-bg);
+  box-shadow: var(--shadow-panel);
+  overflow: hidden;
+  z-index: 1200;
+}
+
+.user-menu-item {
+  border: none;
+  background: transparent;
+  color: var(--text-body);
+  text-align: left;
+  padding: 11px 14px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.user-menu-item:hover {
+  background: color-mix(in srgb, var(--text-accent) 10%, #ffffff);
+}
+
 @keyframes loginSnakeBorder {
   to {
     transform: rotate(1turn);

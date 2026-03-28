@@ -1,10 +1,17 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.core.security import hash_password, verify_password
 from app.db import get_db
 from app.deps import get_current_user
 from app.models import User
-from app.schemas import UserLocationUpdateRequest, UserResponse, WalletSummaryResponse
+from app.schemas import (
+    ChangePasswordRequest,
+    MessageResponse,
+    UserLocationUpdateRequest,
+    UserResponse,
+    WalletSummaryResponse,
+)
 from app.services import get_or_create_wallet
 
 
@@ -60,3 +67,24 @@ def get_wallet(
         "balance": wallet.balance,
         "transactions": transactions,
     }
+
+
+@router.put("/password", response_model=MessageResponse)
+def change_password(
+    payload: ChangePasswordRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if not verify_password(payload.current_password, current_user.password_hash):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Current password is incorrect")
+
+    if payload.current_password == payload.new_password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New password must be different from the current password",
+        )
+
+    current_user.password_hash = hash_password(payload.new_password)
+    db.add(current_user)
+    db.commit()
+    return {"message": "Password updated successfully."}

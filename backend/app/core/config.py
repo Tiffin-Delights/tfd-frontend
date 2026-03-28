@@ -34,6 +34,22 @@ class Settings(BaseSettings):
     uploads_dir: str = str(BACKEND_DIR / "uploads")
     meal_cancellation_cutoff_hour: int = 22
 
+    otp_code_length: int = 6
+    otp_expiry_minutes: int = 10
+    otp_resend_after_seconds: int = 60
+    otp_max_attempts: int = 5
+
+    smtp_host: str | None = None
+    smtp_port: int = 587
+    smtp_username: str | None = None
+    smtp_password: str | None = None
+    smtp_from_email: str | None = None
+    smtp_use_tls: bool = True
+
+    twilio_account_sid: str | None = None
+    twilio_auth_token: str | None = None
+    twilio_from_number: str | None = None
+
     @field_validator("frontend_origins", mode="before")
     @classmethod
     def parse_frontend_origins(cls, value: Any):
