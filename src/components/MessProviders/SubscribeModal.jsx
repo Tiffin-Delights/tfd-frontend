@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { createSubscription } from "../../api/client";
+import { createPayment, createSubscriptionCheckout, verifyPayment } from "../../api/client";
 import "./SubscribeModal.css";
 
 function SubscribeModal({ auth, provider, isOpen, onClose, onSubscribeSuccess }) {
@@ -7,6 +7,7 @@ function SubscribeModal({ auth, provider, isOpen, onClose, onSubscribeSuccess })
   const [startDate, setStartDate] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [paymentSummary, setPaymentSummary] = useState(null);
 
   if (!isOpen || !provider) return null;
 
@@ -48,13 +49,26 @@ function SubscribeModal({ auth, provider, isOpen, onClose, onSubscribeSuccess })
 
     try {
       setLoading(true);
-      await createSubscription(auth?.token, {
+      const checkout = await createSubscriptionCheckout(auth?.token, {
         provider_id: provider.provider_id,
         plan_type: selectedPlan,
         start_date: startDate,
-        end_date: endDate,
-        status: "active",
       });
+
+      const paymentIntent = await createPayment(auth?.token, {
+        order_id: checkout.order_id,
+        payment_gateway: "tfd_direct",
+      });
+
+      await verifyPayment(auth?.token, {
+        order_id: checkout.order_id,
+        amount: paymentIntent.amount,
+        status: "paid",
+        transaction_id: paymentIntent.transaction_id,
+        payment_gateway: "tfd_direct",
+      });
+
+      setPaymentSummary(checkout);
 
       onSubscribeSuccess?.();
       onClose();
@@ -168,9 +182,21 @@ function SubscribeModal({ auth, provider, isOpen, onClose, onSubscribeSuccess })
                 <strong>{selectedPlan === "weekly" ? "7 days" : "30 days"}</strong>
               </div>
               <div className="summary-item total">
-                <span>Total Price:</span>
+                <span>Base Price:</span>
                 <strong>₹{selectedPrice.toFixed(2)}</strong>
               </div>
+              {paymentSummary?.wallet_balance_used > 0 && (
+                <div className="summary-item">
+                  <span>Wallet Discount:</span>
+                  <strong>- ₹{Number(paymentSummary.wallet_balance_used).toFixed(2)}</strong>
+                </div>
+              )}
+              {paymentSummary?.payable_amount != null && (
+                <div className="summary-item total">
+                  <span>Payable Now:</span>
+                  <strong>₹{Number(paymentSummary.payable_amount).toFixed(2)}</strong>
+                </div>
+              )}
             </div>
           )}
 
@@ -199,7 +225,7 @@ function SubscribeModal({ auth, provider, isOpen, onClose, onSubscribeSuccess })
               className="btn primary"
               disabled={loading || !selectedPrice || selectedPrice <= 0}
             >
-              {loading ? "Processing..." : `Subscribe - ₹${selectedPrice.toFixed(2)}`}
+              {loading ? "Processing..." : `Pay & Subscribe - ₹${selectedPrice.toFixed(2)}`}
             </button>
           </div>
         </form>

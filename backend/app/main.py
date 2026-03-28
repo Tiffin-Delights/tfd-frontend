@@ -1,7 +1,9 @@
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
 from app.routers import auth, feedback, menu, orders, payments, providers, subscriptions, users
@@ -28,6 +30,11 @@ app.add_middleware(
 @app.get("/")
 def root():
     return {"message": "Tiffin backend is running"}
+
+
+uploads_dir = Path(settings.uploads_dir)
+uploads_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=str(uploads_dir)), name="uploads")
 
 
 app.include_router(auth.router, prefix=settings.api_prefix)

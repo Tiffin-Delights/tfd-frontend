@@ -101,6 +101,22 @@ function SubscribersModal({ auth, isOpen, onClose }) {
                         <span>End Date:</span>
                         <strong>{new Date(sub.end_date).toLocaleDateString()}</strong>
                       </div>
+                      <div className="detail-row">
+                        <span>Cancelled Meals:</span>
+                        <strong>{sub.cancelled_meals_count || 0}</strong>
+                      </div>
+                      <div className="detail-row">
+                        <span>Wallet Credit:</span>
+                        <strong>₹{Number(sub.wallet_credit_generated || 0).toFixed(2)}</strong>
+                      </div>
+                      <div className="detail-row">
+                        <span>Latest Rating:</span>
+                        <strong>{sub.latest_feedback_rating ? `⭐ ${sub.latest_feedback_rating}` : "-"}</strong>
+                      </div>
+                      <div className="detail-row">
+                        <span>Feedback:</span>
+                        <strong>{sub.latest_feedback_comment || "-"}</strong>
+                      </div>
                     </div>
                   </div>
                 ))}

@@ -23,5 +23,7 @@ class Settings(BaseSettings):
 
     razorpay_webhook_secret: str = "change_this_webhook_secret"
     frontend_origin: str = "http://localhost:5173"
+    uploads_dir: str = str(BACKEND_DIR / "uploads")
+    meal_cancellation_cutoff_hour: int = 22
 
 settings = Settings()

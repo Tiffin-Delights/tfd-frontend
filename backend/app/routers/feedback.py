@@ -71,13 +71,28 @@ def submit_feedback(
             detail="Please subscribe before submitting feedback for this mess",
         )
 
-    feedback = Feedback(
-        user_id=current_user.user_id,
-        provider_id=payload.provider_id,
-        rating=payload.rating,
-        comment=payload.comment,
+    feedback = (
+        db.query(Feedback)
+        .filter(
+            Feedback.user_id == current_user.user_id,
+            Feedback.provider_id == payload.provider_id,
+        )
+        .order_by(Feedback.created_at.desc())
+        .first()
     )
-    db.add(feedback)
+    if feedback:
+        feedback.rating = payload.rating
+        feedback.comment = payload.comment
+        db.add(feedback)
+    else:
+        feedback = Feedback(
+            user_id=current_user.user_id,
+            provider_id=payload.provider_id,
+            rating=payload.rating,
+            comment=payload.comment,
+        )
+        db.add(feedback)
+
     db.commit()
     db.refresh(feedback)
 
