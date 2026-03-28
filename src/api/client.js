@@ -181,6 +181,13 @@ export async function createSubscription(token, payload) {
   });
 }
 
+export async function deleteSubscription(token, subscriptionId) {
+  return apiRequest(`/subscriptions/${subscriptionId}`, {
+    method: "DELETE",
+    token,
+  });
+}
+
 export async function createSubscriptionCheckout(token, payload) {
   return apiRequest("/subscriptions/checkout", {
     method: "POST",
