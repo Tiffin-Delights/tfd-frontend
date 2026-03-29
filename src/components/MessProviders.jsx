@@ -80,7 +80,25 @@ function ProviderGallery({ provider }) {
   );
 }
 
+function getProviderSearchText(provider) {
+  return [
+    provider?.mess_name,
+    provider?.contact,
+    provider?.location,
+    provider?.address,
+    provider?.description,
+    provider?.weekly_price > 0 ? "weekly budget affordable" : "",
+    provider?.monthly_price > 0 ? "monthly plan" : "",
+    provider?.rating >= 4 ? "top rated best" : "",
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+}
+
 function MessProviders({ auth, onSubscriptionCreated, onAuthUserUpdate, dietTheme = "nonveg" }) {
+  const INITIAL_VISIBLE_PROVIDERS = 7;
+  const PROVIDERS_LOAD_STEP = 8;
   const [selectedProvider, setSelectedProvider] = useState(null);
   const [providers, setProviders] = useState([]);
   const [menuItems, setMenuItems] = useState([]);
@@ -101,6 +119,10 @@ function MessProviders({ auth, onSubscriptionCreated, onAuthUserUpdate, dietThem
   }));
   const [locationSaving, setLocationSaving] = useState(false);
   const [locationError, setLocationError] = useState("");
+  const [visibleProvidersCount, setVisibleProvidersCount] = useState(INITIAL_VISIBLE_PROVIDERS);
+  const [searchInput, setSearchInput] = useState("");
+  const [appliedSearch, setAppliedSearch] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const loadProviders = useCallback(async () => {
     if (!auth?.token) {
@@ -158,6 +180,10 @@ function MessProviders({ auth, onSubscriptionCreated, onAuthUserUpdate, dietThem
       placeId: auth?.user?.place_id || "",
     });
   }, [auth?.user?.current_latitude, auth?.user?.current_longitude, auth?.user?.location, auth?.user?.location_text, auth?.user?.place_id]);
+
+  useEffect(() => {
+    setVisibleProvidersCount(INITIAL_VISIBLE_PROVIDERS);
+  }, [providers, auth?.user?.location_text, auth?.user?.location, appliedSearch]);
 
   useEffect(() => {
     if (dietTheme !== "veg") {
@@ -244,8 +270,90 @@ function MessProviders({ auth, onSubscriptionCreated, onAuthUserUpdate, dietThem
     return grouped;
   }, [menuItems]);
 
+  const searchSuggestions = useMemo(() => {
+    const normalizedInput = searchInput.trim().toLowerCase();
+
+    if (!normalizedInput) {
+      return [];
+    }
+
+    const suggestions = new Set();
+
+    providers.forEach((provider) => {
+      const searchableParts = [
+        provider?.mess_name,
+        provider?.location,
+        provider?.address,
+        provider?.rating >= 4 ? "top rated" : "",
+        provider?.weekly_price > 0 ? "weekly plan" : "",
+        provider?.monthly_price > 0 ? "monthly plan" : "",
+      ]
+        .filter(Boolean)
+        .map((value) => String(value).trim());
+
+      searchableParts.forEach((part) => {
+        if (part.toLowerCase().includes(normalizedInput)) {
+          suggestions.add(part);
+        }
+      });
+
+      String(provider?.mess_name || "")
+        .split(/[\s,/-]+/)
+        .map((word) => word.trim())
+        .filter((word) => word.length > 2 && word.toLowerCase().includes(normalizedInput))
+        .forEach((word) => suggestions.add(word));
+    });
+
+    return Array.from(suggestions).slice(0, 6);
+  }, [providers, searchInput]);
+
+  const filteredProviders = useMemo(() => {
+    const normalizedSearch = appliedSearch.trim().toLowerCase();
+
+    if (!normalizedSearch) {
+      return providers;
+    }
+
+    const searchTerms = normalizedSearch.split(/\s+/).filter(Boolean);
+
+    return [...providers]
+      .map((provider) => {
+        const searchableText = getProviderSearchText(provider);
+        const matchScore = searchTerms.reduce((score, term) => {
+          if (!searchableText.includes(term)) {
+            return score;
+          }
+
+          if (String(provider?.mess_name || "").toLowerCase().includes(term)) {
+            return score + 3;
+          }
+
+          return score + 1;
+        }, 0);
+
+        return { provider, matchScore };
+      })
+      .filter(({ matchScore }) => matchScore > 0)
+      .sort((left, right) => {
+        if (right.matchScore !== left.matchScore) {
+          return right.matchScore - left.matchScore;
+        }
+
+        return Number(right.provider?.rating || 0) - Number(left.provider?.rating || 0);
+      })
+      .map(({ provider }) => provider);
+  }, [appliedSearch, providers]);
+
   const hasSavedLocation =
     auth?.user?.current_latitude != null && auth?.user?.current_longitude != null;
+  const visibleProviders = filteredProviders.slice(0, visibleProvidersCount);
+  const canToggleProviders = filteredProviders.length > INITIAL_VISIBLE_PROVIDERS;
+  const hasHiddenProviders = visibleProvidersCount < filteredProviders.length;
+
+  const runProviderSearch = useCallback(() => {
+    setAppliedSearch(searchInput.trim());
+    setShowSuggestions(false);
+  }, [searchInput]);
   const selectedProviderRating = Number(selectedProvider?.rating || 0).toFixed(1);
 
   const handleLocationSave = async () => {
@@ -274,51 +382,123 @@ function MessProviders({ auth, onSubscriptionCreated, onAuthUserUpdate, dietThem
   return (
     <section className="mess-providers" id="mess-providers">
       <div className="section-head">
-        <p className="eyebrow">Mess Providers</p>
-        <h2>Choose Your Mess</h2>
-        <p className="lede">
+        <h2>Find Mess Near you...</h2>
+        {/* <p className="lede">
           {dietTheme === "veg"
             ? "Veg mode is on, so suggestions only show providers that appear to offer vegetarian meals."
             : "Click on Details to see the full menu of any mess provider."}
-        </p>
+        </p> */}
       </div>
 
       <div className="providers-controls">
         <div className="location-panel">
-          <div>
+          <div className="location-panel__content">
             <p className="location-panel__eyebrow">Delivery Location</p>
-            <h3>Share your location to see nearby tiffin services</h3>
+            <h3>Share your location to unlock nearby tiffin services</h3>
             <p className="location-panel__copy">
-              Use live location or search manually. We only show providers whose delivery radius covers your spot.
+              Search your hostel, flat, PG, office, or landmark and we will only show mess providers that can
+              actually deliver to you.
             </p>
+            <div className="location-panel__benefits">
+              <span className="location-panel__benefit">Live location</span>
+              <span className="location-panel__benefit">Accurate radius match</span>
+              <span className="location-panel__benefit">Faster discovery</span>
+            </div>
           </div>
           <div className="location-panel__picker">
-            <LocationPicker
-              label="Your location"
-              placeholder="Search your address, locality, or landmark"
-              value={locationDraft}
-              onSelect={(location) => {
-                setLocationError("");
-                setLocationDraft(location);
-              }}
-              onError={setLocationError}
-              allowCurrentLocation
-            />
+            <div className="location-panel__search-card">
+              <p className="location-panel__search-label">Where should we deliver?</p>
+              <LocationPicker
+                label="Your location"
+                placeholder="Search your address, locality, or landmark"
+                value={locationDraft}
+                onSelect={(location) => {
+                  setLocationError("");
+                  setLocationDraft(location);
+                }}
+                onError={setLocationError}
+                allowCurrentLocation
+              />
+            </div>
             <button className="btn primary location-panel__save" onClick={handleLocationSave} disabled={locationSaving}>
               {locationSaving ? "Saving..." : hasSavedLocation ? "Update Location" : "Apply Location"}
             </button>
             {locationError && <p className="providers-state providers-state--error">{locationError}</p>}
-            {hasSavedLocation && (
-              <p className="location-panel__saved">
-                Showing providers near <strong>{auth?.user?.location_text || auth?.user?.location}</strong>
-              </p>
-            )}
+            
           </div>
         </div>
       </div>
 
       {!selectedProvider && (
         <div className="provider-grid">
+          {hasSavedLocation && (
+            <div className="provider-grid__header">
+              <span className="provider-grid__label">Selected address</span>
+              <h3>{auth?.user?.location_text || auth?.user?.location}</h3>
+            </div>
+          )}
+          {hasSavedLocation && providers.length > 0 && (
+            <div className="provider-search">
+              <label className="provider-search__label" htmlFor="provider-search-input">
+                Fing your favourite tiffin service : 
+              </label>
+              <div className="provider-search__box">
+                <input
+                  id="provider-search-input"
+                  type="text"
+                  value={searchInput}
+                  placeholder="Search by mess name or keyword"
+                  onChange={(event) => {
+                    setSearchInput(event.target.value);
+                    setShowSuggestions(true);
+                  }}
+                  onFocus={() => {
+                    if (searchInput.trim()) {
+                      setShowSuggestions(true);
+                    }
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      runProviderSearch();
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  className="provider-search__trigger"
+                  onClick={runProviderSearch}
+                  aria-label="Search providers"
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path
+                      d="M10.5 4a6.5 6.5 0 1 0 4.03 11.6l4.43 4.44 1.41-1.42-4.43-4.43A6.5 6.5 0 0 0 10.5 4Zm0 2a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9Z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </button>
+                {showSuggestions && searchSuggestions.length > 0 && (
+                  <div className="provider-search__suggestions">
+                    {searchSuggestions.map((suggestion) => (
+                      <button
+                        key={suggestion}
+                        type="button"
+                        className="provider-search__suggestion"
+                        onMouseDown={(event) => {
+                          event.preventDefault();
+                          setSearchInput(suggestion);
+                          setShowSuggestions(false);
+                        }}
+                      >
+                        {suggestion}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {/* {appliedSearch} */}
+            </div>
+          )}
           {!hasSavedLocation && (
             <p className="providers-state">
               Set your location first to discover providers that can deliver to you.
@@ -329,56 +509,84 @@ function MessProviders({ auth, onSubscriptionCreated, onAuthUserUpdate, dietThem
           {!providersLoading && !providersError && hasSavedLocation && providers.length === 0 && (
             <p className="providers-state">No tiffin providers currently deliver to this location.</p>
           )}
+          {!providersLoading && !providersError && hasSavedLocation && providers.length > 0 && filteredProviders.length === 0 && (
+            <p className="providers-state">No providers matched your search. Try another keyword and click search.</p>
+          )}
 
-          {providers.map((provider) => (
-            <article className="provider-card" key={provider.provider_id}>
-              <ProviderGallery provider={provider} />
-              <div className="provider-card__content">
-                <h3>{provider.mess_name}</h3>
-                <div className="provider-card__meta">
-                  <p>
-                    <strong>Rating:</strong> <StarRating value={provider.rating} size="sm" showValue />
-                  </p>
-                  <p>
-                    <strong>Contact:</strong> {provider.contact}
-                  </p>
-                </div>
-                <div className="pricing-info">
-                  {provider.weekly_price > 0 && (
-                    <p><strong>Weekly:</strong> ₹{provider.weekly_price}/week</p>
-                  )}
-                  {provider.monthly_price > 0 && (
-                    <p><strong>Monthly:</strong> ₹{provider.monthly_price}/month</p>
-                  )}
-                </div>
-              </div>
-              <div className="card-actions">
+          {visibleProviders.length > 0 && (
+            <div className={`provider-grid__list${appliedSearch ? " provider-grid__list--search" : ""}`}>
+              {visibleProviders.map((provider) => (
+                <article className="provider-card" key={provider.provider_id}>
+                  <ProviderGallery provider={provider} />
+                  <div className="provider-card__content">
+                    <h3>{provider.mess_name}</h3>
+                    <div className="provider-card__meta">
+                      <div className="provider-card__meta-line">
+                        <strong>Rating:</strong> <StarRating value={provider.rating} size="sm" showValue />
+                      </div>
+                      <p>
+                        <strong>Contact:</strong> {String(provider.contact || "-")}
+                      </p>
+                    </div>
+                    <div className="pricing-info">
+                      {provider.weekly_price > 0 && (
+                        <p><strong>Weekly:</strong> ₹{provider.weekly_price}/week</p>
+                      )}
+                      {provider.monthly_price > 0 && (
+                        <p><strong>Monthly:</strong> ₹{provider.monthly_price}/month</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="card-actions">
+                    <button
+                      className="btn primary"
+                      onClick={() => setSelectedProvider(provider)}
+                    >
+                      Details
+                    </button>
+                    <button
+                      className="btn secondary"
+                      onClick={() => {
+                        setSelectedForSubscribe(provider);
+                        setSubscribeModal(true);
+                      }}
+                      disabled={auth?.user?.role !== "customer" || !hasSavedLocation}
+                      title={
+                        auth?.user?.role !== "customer"
+                          ? "Customers only"
+                          : !hasSavedLocation
+                            ? "Set your location first"
+                            : "Subscribe to this plan"
+                      }
+                    >
+                      Subscribe
+                    </button>
+                  </div>
+                </article>
+              ))}
+              {canToggleProviders && (
                 <button
-                  className="btn primary"
-                  onClick={() => setSelectedProvider(provider)}
-                >
-                  Details
-                </button>
-                <button
-                  className="btn secondary"
-                  onClick={() => {
-                    setSelectedForSubscribe(provider);
-                    setSubscribeModal(true);
-                  }}
-                  disabled={auth?.user?.role !== "customer" || !hasSavedLocation}
-                  title={
-                    auth?.user?.role !== "customer"
-                      ? "Customers only"
-                      : !hasSavedLocation
-                        ? "Set your location first"
-                        : "Subscribe to this plan"
+                  type="button"
+                  className="provider-card provider-card--toggle"
+                  onClick={() =>
+                    setVisibleProvidersCount((current) =>
+                      current < filteredProviders.length
+                        ? Math.min(current + PROVIDERS_LOAD_STEP, filteredProviders.length)
+                        : INITIAL_VISIBLE_PROVIDERS
+                    )
                   }
                 >
-                  Subscribe
+                  <span className="provider-card__toggle-eyebrow">More Providers</span>
+                  <strong>{hasHiddenProviders ? "Show More >>" : "<< Show Less"}</strong>
+                  <span className="provider-card__toggle-copy">
+                    {hasHiddenProviders
+                      ? `${filteredProviders.length - visibleProvidersCount} more providers deliver here.`
+                      : "Collapse back to the first 7 providers."}
+                  </span>
                 </button>
-              </div>
-            </article>
-          ))}
+              )}
+            </div>
+          )}
         </div>
       )}
 

@@ -1,7 +1,7 @@
 from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from app.db import get_db
@@ -9,6 +9,8 @@ from app.deps import get_current_user, require_roles
 from app.models import (
     Feedback,
     Order,
+    OrderType,
+    Payment,
     PaymentStatus,
     Provider,
     Subscription,
@@ -23,6 +25,7 @@ from app.models import (
 from app.schemas import (
     SubscriptionCheckoutRequest,
     SubscriptionCheckoutResponse,
+    SubscriptionDeleteResponse,
     SubscriptionMealCancelRequest,
     SubscriptionMealCancelResponse,
     SubscriptionMealResponse,
@@ -319,6 +322,109 @@ def list_my_subscription_meals(
         query = query.filter(SubscriptionMeal.subscription_id == subscription_id)
     meals = query.order_by(SubscriptionMeal.service_date.asc(), SubscriptionMeal.meal_type.asc()).all()
     return meals
+
+
+@router.delete("/{subscription_id}", response_model=SubscriptionDeleteResponse)
+def delete_subscription(
+    subscription_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles(UserRole.customer.value)),
+):
+    subscription = (
+        db.query(Subscription)
+        .filter(
+            Subscription.subscription_id == subscription_id,
+            Subscription.user_id == current_user.user_id,
+        )
+        .first()
+    )
+    if not subscription:
+        raise HTTPException(status_code=404, detail="Subscription not found.")
+
+    meals = (
+        db.query(SubscriptionMeal)
+        .filter(SubscriptionMeal.subscription_id == subscription.subscription_id)
+        .all()
+    )
+    meal_ids = [meal.subscription_meal_id for meal in meals]
+
+    orders = (
+        db.query(Order)
+        .filter(
+            Order.user_id == subscription.user_id,
+            Order.provider_id == subscription.provider_id,
+            Order.order_type == OrderType.subscription,
+            Order.start_date == subscription.start_date,
+            Order.end_date == subscription.end_date,
+        )
+        .all()
+    )
+    order_ids = [order.order_id for order in orders]
+
+    wallet_transactions = []
+    if meal_ids or order_ids:
+        filters = []
+        if meal_ids:
+            filters.append(
+                (WalletTransaction.source_type == "meal_cancellation")
+                & (WalletTransaction.source_id.in_(meal_ids))
+            )
+        if order_ids:
+            filters.append(
+                (WalletTransaction.source_type == "order_payment")
+                & (WalletTransaction.source_id.in_(order_ids))
+            )
+
+        wallet_transactions = (
+            db.query(WalletTransaction)
+            .filter(
+                WalletTransaction.user_id == current_user.user_id,
+                or_(*filters),
+            )
+            .all()
+        )
+
+    wallet = get_or_create_wallet(db, current_user)
+    adjusted_wallet_balance = quantize_money(wallet.balance)
+    for transaction in wallet_transactions:
+        if transaction.transaction_type == WalletTransactionType.credit:
+            adjusted_wallet_balance = quantize_money(adjusted_wallet_balance - transaction.amount)
+        else:
+            adjusted_wallet_balance = quantize_money(adjusted_wallet_balance + transaction.amount)
+
+    if adjusted_wallet_balance < 0:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="This subscription cannot be deleted because wallet credits from it have already been used.",
+        )
+
+    wallet.balance = adjusted_wallet_balance
+    db.add(wallet)
+
+    deleted_payment_count = 0
+    if order_ids:
+        payments = db.query(Payment).filter(Payment.order_id.in_(order_ids)).all()
+        for payment in payments:
+            db.delete(payment)
+        deleted_payment_count = len(payments)
+
+    for transaction in wallet_transactions:
+        db.delete(transaction)
+
+    for order in orders:
+        db.delete(order)
+
+    db.delete(subscription)
+    db.commit()
+
+    return {
+        "subscription_id": subscription_id,
+        "deleted_meal_count": len(meal_ids),
+        "deleted_order_count": len(order_ids),
+        "deleted_payment_count": deleted_payment_count,
+        "deleted_wallet_transaction_count": len(wallet_transactions),
+        "wallet_balance": wallet.balance,
+    }
 
 
 @router.post("/meals/cancel", response_model=SubscriptionMealCancelResponse)

@@ -324,6 +324,15 @@ class SubscriptionMealCancelResponse(BaseModel):
     credited_amount: Decimal
 
 
+class SubscriptionDeleteResponse(BaseModel):
+    subscription_id: int
+    deleted_meal_count: int
+    deleted_order_count: int
+    deleted_payment_count: int
+    deleted_wallet_transaction_count: int
+    wallet_balance: Decimal
+
+
 class PaymentCreateRequest(BaseModel):
     order_id: int
     payment_gateway: Literal["tfd_direct"] = "tfd_direct"
