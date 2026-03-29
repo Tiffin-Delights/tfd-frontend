@@ -1,21 +1,49 @@
 import { useState } from "react";
 import "./LoginModal.css";
+import { loginUser } from "../../api/client";
+import { validateLoginForm } from "./authValidation";
+import PasswordField from "./PasswordField";
 
-// Placeholder destination for customer portal
-const CUSTOMER_PORTAL_URL = "https://customer.tiffindelight.com";
-
-function CustomerLoginModal({ onBack, onClose }) {
+function CustomerLoginModal({ onBack, onClose, onLoginSuccess, onSwitchToSignup, onForgotPassword }) {
   const [form, setForm] = useState({ email: "", password: "" });
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => {
+    if (error) {
+      setError("");
+    }
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Placeholder action: open the customer portal in a new tab
-    window.open(CUSTOMER_PORTAL_URL, "_blank", "noopener,noreferrer");
-    onClose();
+    setError("");
+
+    const validationError = validateLoginForm(form);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const result = await loginUser(form.email, form.password);
+      if (result?.user?.role !== "customer") {
+        setError("This account is not a customer account.");
+        return;
+      }
+
+      if (onLoginSuccess) {
+        onLoginSuccess(result);
+      }
+      onClose();
+    } catch (err) {
+      setError(err.message || "Login failed. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -48,28 +76,38 @@ function CustomerLoginModal({ onBack, onClose }) {
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="cust-password">Password</label>
-            <input
-              id="cust-password"
-              name="password"
-              type="password"
-              placeholder="Enter your password"
-              value={form.password}
-              onChange={handleChange}
-              autoComplete="current-password"
-              required
-            />
-          </div>
+          <PasswordField
+            id="cust-password"
+            name="password"
+            label="Password"
+            placeholder="Enter your password"
+            value={form.password}
+            onChange={handleChange}
+            autoComplete="current-password"
+            minLength={6}
+            hint="Password must be at least 6 characters."
+            required
+          />
 
-          <button type="submit" className="modal-submit">
-            Log In to My Account
+          {error && <p className="modal-error">{error}</p>}
+
+          <button type="submit" className="modal-submit" disabled={isSubmitting}>
+            {isSubmitting ? "Logging in..." : "Log In to My Account"}
           </button>
         </form>
 
         <hr className="modal-divider" />
         <p className="modal-footnote">
-          New here? Sign up on the customer portal.
+          Forgot your password?{" "}
+          <button type="button" className="modal-link" onClick={onForgotPassword}>
+            Reset it
+          </button>
+        </p>
+        <p className="modal-footnote">
+          New here?{" "}
+          <button type="button" className="modal-link" onClick={onSwitchToSignup}>
+            Create customer account
+          </button>
         </p>
       </div>
     </div>

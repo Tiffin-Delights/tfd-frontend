@@ -1,33 +1,37 @@
+import { useState } from "react";
 import SectionHead from "./SectionHead";
+import ProviderLoginModal from "./Auth/ProviderLoginModal";
 
 const plans = [
   {
-    name: "Starter",
+    name: "One-time order",
     price: "₹99",
     per: "/meal",
-    points: ["1 sabzi + rice/roti", "Salad & raita", "Choose 3 days/week"],
-    cta: "Start 3-day trial",
+    points: ["Single order (no commitment)", "Choose any 3 dishes", "Delivered once"],
+    cta: "Try a one-time meal",
     highlight: false,
   },
   {
-    name: "Balanced",
+    name: "Weekly subscription",
     price: "₹129",
     per: "/meal",
-    points: ["2 sabzi + rice & roti", "Dal + dessert twice a week", "5 days/week"],
+    points: ["Best for regular meals", "Pause / resume anytime", "Free delivery on 5+ meals"],
     cta: "Subscribe weekly",
     highlight: true,
   },
   {
-    name: "Premium",
-    price: "₹159",
+    name: "Monthly subscription",
+    price: "₹149",
     per: "/meal",
-    points: ["Chef specials & high-protein", "Unlimited swaps", "Weekend deliveries included"],
-    cta: "Book a tasting",
+    points: ["Most value per meal", "Priority menu swaps", "Flexible delivery days"],
+    cta: "Subscribe monthly",
     highlight: false,
   },
 ];
 
 function Plans() {
+  const [providerLoginOpen, setProviderLoginOpen] = useState(false);
+
   return (
     <section className="plans" id="plans">
       <SectionHead
@@ -52,6 +56,28 @@ function Plans() {
           </div>
         ))}
       </div>
+
+      <div className="provider-cta">
+        <p>
+          Want to partner with us? Register as a provider to see your
+          dashboard and pricing tools.
+        </p>
+        <div className="provider-controls">
+          <button
+            className="btn primary"
+            onClick={() => setProviderLoginOpen(true)}
+          >
+            Provider login / register
+          </button>
+        </div>
+      </div>
+
+      {providerLoginOpen && (
+        <ProviderLoginModal
+          onBack={() => setProviderLoginOpen(false)}
+          onClose={() => setProviderLoginOpen(false)}
+        />
+      )}
     </section>
   );
 }

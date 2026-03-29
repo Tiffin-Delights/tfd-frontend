@@ -3,7 +3,7 @@
   width: 100%;
   top: 0;
   z-index: 1000;
-  background: #E37434;
+  background: var(--header-bg);
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
@@ -25,7 +25,7 @@
   object-fit: cover;
   border-radius: 50%;
   border: 2px solid rgba(253, 249, 249, 0.75);
-  background: #fff8ec;
+  background: var(--page-bg);
   box-shadow: 0 6px 16px rgba(67, 24, 6, 0.18);
 }
 
@@ -41,17 +41,19 @@
   display: flex;
   gap: 50px;
   list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
 .nav-menu a {
   text-decoration: none;
-  color: #fdf9f9;
+  color: var(--header-link);
   font-size: 0.95rem;
   font-weight: 500;
   position: relative;
 }
 .nav-menu a:hover {
-  color: #134222;
+  color: var(--header-hover);
 }
 .nav-menu a::after {
   content: "";
@@ -60,7 +62,7 @@
   bottom: -6px;
   width: 0;
   height: 2px;
-  background: #1f7a4d;
+  background: var(--header-underline);
   transition: width 0.3s;
 }
 
@@ -79,7 +81,7 @@
 .hamburger .bar {
   width: 25px;
   height: 3px;
-  background: #fdf9f9;
+  background: var(--header-link);
   border-radius: 3px;
   transition: all 0.3s ease;
 }
@@ -103,6 +105,69 @@
   gap: 10px;
 }
 
+.diet-toggle-item {
+  display: flex;
+  align-items: center;
+}
+
+.diet-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  border-radius: 999px;
+  background: rgba(255, 248, 236, 0.12);
+  color: var(--header-link);
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.diet-toggle:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.42);
+}
+
+.diet-toggle__label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  opacity: 0.68;
+  transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+.diet-toggle.is-nonveg .diet-toggle__label--left,
+.diet-toggle.is-veg .diet-toggle__label--right {
+  opacity: 1;
+  color: #fffef8;
+}
+
+.diet-toggle__track {
+  position: relative;
+  width: 40px;
+  height: 22px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.18);
+}
+
+.diet-toggle__thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffd06d, #e56b3f);
+  box-shadow: 0 2px 6px rgba(67, 24, 6, 0.25);
+  transition: transform 0.22s ease, background 0.22s ease;
+}
+
+.diet-toggle.is-veg .diet-toggle__thumb {
+  transform: translateX(18px);
+  background: linear-gradient(135deg, #a7ec94, #49a35f);
+}
+
 .login-icon {
   height: 20px;
   width: 20px;
@@ -118,7 +183,7 @@
   min-height: 46px;
   padding: 0;
   background: linear-gradient(135deg, rgba(255, 248, 236, 0.16), rgba(255, 255, 255, 0.1));
-  color: #fff8ec;
+  color: var(--header-link);
   border-radius: 999px;
   border: none;
   cursor: pointer;
@@ -145,8 +210,8 @@
     rgba(255, 248, 236, 0) 0deg,
     rgba(255, 248, 236, 0) 280deg,
     #fff8ec 308deg,
-    #ffcf8b 328deg,
-    #134222 344deg,
+    var(--snake-ring-accent) 328deg,
+    var(--text-strong) 344deg,
     rgba(255, 248, 236, 0) 360deg
   );
   animation: loginSnakeBorder 2.8s linear infinite;
@@ -157,7 +222,7 @@
   position: absolute;
   inset: 2px;
   border-radius: inherit;
-  background: linear-gradient(135deg, #cf6228, #dd7a3c);
+  background: linear-gradient(135deg, var(--snake-primary-start), var(--snake-primary-end));
 }
 
 .login-btn__content {
@@ -165,7 +230,7 @@
   z-index: 1;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 20px;
   padding: 12px 20px;
   border-radius: inherit;
   background: linear-gradient(135deg, rgba(255, 248, 236, 0.18), rgba(255, 255, 255, 0.08));
@@ -180,17 +245,95 @@
 
 .login-btn:hover {
   transform: translateY(-1px);
-  color: #fffdf8;
+  color: var(--header-hover);
   box-shadow: 0 14px 30px rgba(125, 47, 55, 0.28);
 }
 
 .login-btn:hover .login-btn__content {
-  background: linear-gradient(135deg, #8f3842, #7d2f37);
+  background: linear-gradient(135deg, var(--snake-ring-accent), var(--snake-hover-start));
+  color: #fffdf8;
 }
 
 .login-btn:focus-visible {
   outline: 3px solid rgba(255, 248, 236, 0.7);
   outline-offset: 3px;
+}
+
+/* Auth Section */
+.auth-section {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.user-info {
+  color: var(--header-link);
+  font-size: 0.9rem;
+  font-weight: 500;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.logout-btn {
+  min-width: 100px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--text-accent) 24%, rgba(255, 255, 255, 0.12)),
+    rgba(255, 255, 255, 0.1)
+  );
+}
+
+.logout-btn:hover .login-btn__content {
+  background: linear-gradient(135deg, var(--snake-hover-start), var(--snake-hover-end));
+  color: #fffdf8;
+}
+
+.user-menu {
+  position: relative;
+}
+
+.user-menu-trigger {
+  min-width: 52px;
+  width: 52px;
+  min-height: 46px;
+}
+
+.user-menu-trigger .login-btn__content {
+  width: 100%;
+  justify-content: center;
+  padding: 12px;
+}
+
+.user-menu-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  display: flex;
+  flex-direction: column;
+  min-width: 170px;
+  border-radius: 12px;
+  border: 1px solid var(--panel-card-border);
+  background: var(--panel-card-bg);
+  box-shadow: var(--shadow-panel);
+  overflow: hidden;
+  z-index: 1200;
+}
+
+.user-menu-item {
+  border: none;
+  background: transparent;
+  color: var(--text-body);
+  text-align: left;
+  padding: 11px 14px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.user-menu-item:hover {
+  background: color-mix(in srgb, var(--text-accent) 10%, #ffffff);
 }
 
 @keyframes loginSnakeBorder {
@@ -215,14 +358,14 @@
     display: flex;
   }
 
-  .nav-menu {
+.nav-menu {
     position: absolute;
     top: 60px;
     left: 0;
     width: 100%;
     flex-direction: column;
     gap: 0;
-    background: #7d2f37;
+    background: var(--header-mobile-bg);
     padding: 0;
     list-style: none;
     max-height: 0;
@@ -250,6 +393,11 @@
   .login-btn {
     min-width: 46px;
     min-height: 46px;
+  }
+
+  .diet-toggle {
+    margin: 0 24px;
+    justify-content: center;
   }
 
   .login-btn__content {

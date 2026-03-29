@@ -7,18 +7,66 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Environment files
+.env
+.env.*
+!.env.example
+!.env.sample
+
+# Local Python virtual environments
+.venv/
+venv/
+env/
+.python-version
+!.python-version
+
 node_modules
 dist
 dist-ssr
+.vite/
 *.local
+coverage/
+build/
+
+# Python cache and build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.eggs/
+*.egg-info/
+pip-wheel-metadata/
+
+# Backend runtime and database artifacts
+backend/.env
+backend/.env.*
+!backend/.env.sample
+backend/.local/
+backend/*.db
+backend/*.sqlite
+backend/*.sqlite3
+
+# Jupyter and notebook checkpoints
+.ipynb_checkpoints/
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 .idea
 .DS_Store
+.envrc
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+__pycache__/
+*.pyc

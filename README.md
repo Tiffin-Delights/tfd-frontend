@@ -2,6 +2,11 @@
 
 This repository contains a simple React/Vite frontend that demonstrates a marketing-style landing page using a warm, earthy color palette.
 
+## Setup Guides
+
+- Frontend detailed setup: `FRONTEND_SETUP.md`
+- Backend detailed setup: `backend/BACKEND_SETUP.md`
+
 ## 🚀 Getting Started (for beginners)
 
 This section walks through every step required to get the project up and running on a fresh machine. Don’t worry if you’re new to Git, Node, or npm — just follow the commands in order.
@@ -15,21 +20,21 @@ This section walks through every step required to get the project up and running
      git --version
      ```
 
-2. **Install Node.js** (v18 or newer)
+2. **Install Node.js** (recommended: match `.nvmrc`, currently `22.12.0`)
    - Recommended method (version manager):
      ```bash
      # install nvm if you don't have it already
      curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
      source ~/.nvm/nvm.sh
 
-     # install and use the latest long-term release
-     nvm install --lts
-     nvm use --lts
+     # install and use the repo's supported version
+     nvm install
+     nvm use
      ```
    - Alternatively download the installer from [nodejs.org](https://nodejs.org/).
    - Check your version:
      ```bash
-     node --version   # should print 18.x or higher
+     node --version   # should satisfy package.json engines
      npm --version    # npm comes bundled with Node
      ```
 
@@ -45,7 +50,7 @@ cd tfd-frontend
 ### 📦 Install project dependencies
 
 ```bash
-npm install      # downloads packages listed in package.json
+npm ci           # installs the exact versions from package-lock.json
 # or if you use yarn:
 # yarn
 ```
@@ -129,3 +134,32 @@ src/
 ---
 
 Feel free to open issues or modify as needed. Happy hacking! 🎉
+
+## Backend (FastAPI + PostgreSQL)
+
+Backend code is available in [backend](backend).
+
+### Quick start
+
+1. Move to backend:
+  - `cd backend`
+2. Create and activate virtualenv.
+3. Install dependencies:
+  - `pip install -r requirements.txt`
+4. Copy `backend/.env.sample` to `backend/.env`
+5. Run server:
+  - `python -m uvicorn app.main:app --reload --port 8000`
+
+The backend reads PostgreSQL credentials from each developer's own ignored `backend/.env`. On startup it will try to create the target database automatically if it does not exist yet, then create the tables automatically.
+
+This repo disables Python bytecode generation during local runs, so `__pycache__` and `.pyc` files should not be created.
+
+### Frontend API base URL
+
+The default frontend `.env.example` now uses a relative API base and a dev proxy target, so a fresh local clone works without editing it if your backend runs on `http://127.0.0.1:8000`.
+
+Set these in frontend `.env` only if needed:
+
+- `VITE_API_BASE_URL=/api/v1`
+- `VITE_API_PROXY_TARGET=http://127.0.0.1:8000`
+- `VITE_LOCATIONIQ_KEY=`

@@ -18,7 +18,7 @@ function RoleSelectModal({ onSelect, onClose }) {
             onClick={() => onSelect("customer")}
           >
             <span className="role-card__icon">🍱</span>
-            <span className="role-card__label">Customer</span>
+            <span className="role-card__label">Want to eat!</span>
             <span className="role-card__sub">
               Order & manage your tiffin
             </span>
@@ -29,7 +29,7 @@ function RoleSelectModal({ onSelect, onClose }) {
             onClick={() => onSelect("provider")}
           >
             <span className="role-card__icon">🏪</span>
-            <span className="role-card__label">Provider</span>
+            <span className="role-card__label">Land you business</span>
             <span className="role-card__sub">
               Tiffin service business
             </span>
