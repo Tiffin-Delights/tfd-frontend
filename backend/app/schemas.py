@@ -6,9 +6,11 @@ from pydantic import BaseModel, EmailStr, Field
 
 from app.models import (
     DayOfWeek,
+    DishFoodType,
     MealType,
     OrderType,
     PaymentStatus,
+    ProviderFoodCategory,
     SubscriptionMealStatus,
     SubscriptionPlan,
     SubscriptionStatus,
@@ -30,6 +32,7 @@ class UserRegisterRequest(BaseModel):
     current_longitude: Decimal | None = Field(default=None, ge=-180, le=180)
     delivery_address: str | None = Field(default=None, min_length=8, max_length=500)
     mess_name: str | None = Field(default=None, min_length=2, max_length=180)
+    provider_food_category: ProviderFoodCategory | None = None
     city: str | None = Field(default=None, min_length=2, max_length=120)
     contact: str | None = Field(default=None, min_length=8, max_length=20)
     service_address_text: str | None = Field(default=None, min_length=5, max_length=255)
@@ -124,6 +127,7 @@ class ProviderResponse(BaseModel):
     mess_name: str
     city: str
     contact: str
+    provider_food_category: ProviderFoodCategory
     service_address_text: str | None = None
     service_place_id: str | None = None
     service_latitude: Decimal | None = None
@@ -177,10 +181,16 @@ class ProviderLocationUpdateRequest(BaseModel):
     service_radius_km: Decimal = Field(gt=0, le=100)
 
 
+class MenuDishItem(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+    food_type: DishFoodType
+
+
 class MenuUploadRequest(BaseModel):
     day: DayOfWeek
     meal_type: MealType
-    dishes: list[str] = Field(min_length=1)
+    dishes: list[str] | None = Field(default=None, min_length=1)
+    dish_items: list[MenuDishItem] | None = Field(default=None, min_length=1)
 
 
 class MenuItemResponse(BaseModel):
@@ -193,6 +203,7 @@ class MenuItemResponse(BaseModel):
     day: DayOfWeek
     meal_type: MealType
     dishes: list[str]
+    dish_items: list[MenuDishItem] = Field(default_factory=list)
 
     @property
     def id(self):
@@ -374,6 +385,7 @@ class ProviderDashboardResponse(BaseModel):
     mess_name: str
     city: str
     contact: str
+    provider_food_category: ProviderFoodCategory
     service_address_text: str | None = None
     service_place_id: str | None = None
     service_latitude: Decimal | None = None

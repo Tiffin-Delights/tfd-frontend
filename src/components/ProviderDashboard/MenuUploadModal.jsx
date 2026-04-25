@@ -1,12 +1,35 @@
-import { useState, useEffect } from "react";
-import { uploadMenuDish, getMyMenu, deleteMenuDish } from "../../api/client";
+import { useEffect, useState } from "react";
+import { deleteMenuDish, getMyMenu, uploadMenuDish } from "../../api/client";
 import "./MenuUploadModal.css";
 
-function MenuUploadModal({ auth, isOpen, onClose, onUploadSuccess }) {
+function createDishRow(providerFoodCategory) {
+  return {
+    name: "",
+    food_type: providerFoodCategory === "pure_veg" ? "veg" : "veg",
+  };
+}
+
+function normalizeDishItems(menuItem) {
+  if (Array.isArray(menuItem?.dish_items) && menuItem.dish_items.length > 0) {
+    return menuItem.dish_items
+      .map((dish) => ({
+        name: String(dish?.name || "").trim(),
+        food_type: dish?.food_type === "nonveg" ? "nonveg" : "veg",
+      }))
+      .filter((dish) => dish.name.length > 0);
+  }
+
+  return (Array.isArray(menuItem?.dishes) ? menuItem.dishes : [])
+    .map((dishName) => String(dishName || "").trim())
+    .filter(Boolean)
+    .map((dishName) => ({ name: dishName, food_type: "veg" }));
+}
+
+function MenuUploadModal({ auth, providerFoodCategory = "mixed", isOpen, onClose, onUploadSuccess }) {
   const [formData, setFormData] = useState({
     day: "monday",
     meal_type: "breakfast",
-    dishes: ""
+    dishRows: [createDishRow(providerFoodCategory)],
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -14,13 +37,22 @@ function MenuUploadModal({ auth, isOpen, onClose, onUploadSuccess }) {
   const [menuItems, setMenuItems] = useState([]);
   const [loadingMenu, setLoadingMenu] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(null);
-  const [activeTab, setActiveTab] = useState("form"); // "form" or "view"
+  const [activeTab, setActiveTab] = useState("form");
   const token = auth?.token;
 
   const days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
   const mealTypes = ["breakfast", "lunch", "snacks", "dinner"];
 
-  // Fetch existing menu items on modal open
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      dishRows: prev.dishRows.map((row) => ({
+        ...row,
+        food_type: providerFoodCategory === "pure_veg" ? "veg" : row.food_type,
+      })),
+    }));
+  }, [providerFoodCategory]);
+
   useEffect(() => {
     if (!isOpen || !token) {
       return undefined;
@@ -65,35 +97,75 @@ function MenuUploadModal({ auth, isOpen, onClose, onUploadSuccess }) {
     }
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+  const handleChange = (event) => {
+    const { name, value } = event.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleDishRowChange = (index, field, value) => {
+    setFormData((prev) => {
+      const nextDishRows = [...prev.dishRows];
+      nextDishRows[index] = {
+        ...nextDishRows[index],
+        [field]: field === "food_type" && providerFoodCategory === "pure_veg" ? "veg" : value,
+      };
+      return {
+        ...prev,
+        dishRows: nextDishRows,
+      };
+    });
+  };
+
+  const addDishRow = () => {
+    setFormData((prev) => ({
+      ...prev,
+      dishRows: [...prev.dishRows, createDishRow(providerFoodCategory)],
+    }));
+  };
+
+  const removeDishRow = (index) => {
+    setFormData((prev) => {
+      if (prev.dishRows.length <= 1) {
+        return prev;
+      }
+      return {
+        ...prev,
+        dishRows: prev.dishRows.filter((_, currentIndex) => currentIndex !== index),
+      };
+    });
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setError(null);
     setSuccess(false);
 
-    if (!formData.dishes.trim()) {
-      setError("Please enter at least one dish");
+    const dishItems = formData.dishRows
+      .map((row) => ({
+        name: String(row?.name || "").trim(),
+        food_type:
+          providerFoodCategory === "pure_veg"
+            ? "veg"
+            : row?.food_type === "nonveg"
+              ? "nonveg"
+              : "veg",
+      }))
+      .filter((row) => row.name.length > 0);
+
+    if (dishItems.length === 0) {
+      setError("Please enter at least one dish item");
       return;
     }
 
     try {
       setLoading(true);
-      const dishesArray = formData.dishes
-        .split(",")
-        .map((dish) => dish.trim())
-        .filter((dish) => dish.length > 0);
-
       const payload = {
         day: formData.day,
         meal_type: formData.meal_type,
-        dishes: dishesArray
+        dish_items: dishItems,
       };
 
       await uploadMenuDish(token, payload);
@@ -102,10 +174,9 @@ function MenuUploadModal({ auth, isOpen, onClose, onUploadSuccess }) {
       setFormData({
         day: "monday",
         meal_type: "breakfast",
-        dishes: ""
+        dishRows: [createDishRow(providerFoodCategory)],
       });
 
-      // Reload menu items
       await loadExistingMenu();
 
       setTimeout(() => {
@@ -119,21 +190,29 @@ function MenuUploadModal({ auth, isOpen, onClose, onUploadSuccess }) {
     }
   };
 
+  const resolveMenuItemId = (item) => {
+    const rawId = item?.menu_id ?? item?.id;
+    const id = Number(rawId);
+    return Number.isFinite(id) ? id : null;
+  };
+
   const handleDeleteItem = async (itemId) => {
-    if (!confirm("Are you sure you want to delete this menu item?")) return;
+    if (!window.confirm("Are you sure you want to delete this menu item?")) {
+      return;
+    }
 
     if (!Number.isFinite(Number(itemId))) {
-      alert("Unable to delete this item because its ID is invalid. Please refresh and try again.");
+      window.alert("Unable to delete this item because its ID is invalid. Please refresh and try again.");
       return;
     }
 
     try {
       setDeleteLoading(itemId);
       await deleteMenuDish(token, itemId);
-      setMenuItems(menuItems.filter((item) => resolveMenuItemId(item) !== itemId));
+      setMenuItems((current) => current.filter((item) => resolveMenuItemId(item) !== itemId));
       await loadExistingMenu();
     } catch (err) {
-      alert("Failed to delete menu item: " + err.message);
+      window.alert(`Failed to delete menu item: ${err.message}`);
     } finally {
       setDeleteLoading(null);
     }
@@ -141,7 +220,7 @@ function MenuUploadModal({ auth, isOpen, onClose, onUploadSuccess }) {
 
   const groupMenuByDayAndMeal = () => {
     const grouped = {};
-    menuItems.forEach(item => {
+    menuItems.forEach((item) => {
       const key = `${item.day}-${item.meal_type}`;
       if (!grouped[key]) {
         grouped[key] = [];
@@ -151,25 +230,20 @@ function MenuUploadModal({ auth, isOpen, onClose, onUploadSuccess }) {
     return grouped;
   };
 
-  const resolveMenuItemId = (item) => {
-    const rawId = item?.menu_id ?? item?.id;
-    const id = Number(rawId);
-    return Number.isFinite(id) ? id : null;
-  };
-
-  if (!isOpen) return null;
+  if (!isOpen) {
+    return null;
+  }
 
   const groupedMenu = groupMenuByDayAndMeal();
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content menu-upload-modal large-modal" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-content menu-upload-modal large-modal" onClick={(event) => event.stopPropagation()}>
         <div className="modal-header">
           <h2>🍽️ Manage Menu Items</h2>
           <button className="close-btn" onClick={onClose}>✕</button>
         </div>
 
-        {/* Tabs */}
         <div className="menu-tabs">
           <button
             className={`tab-btn ${activeTab === "form" ? "active" : ""}`}
@@ -185,7 +259,6 @@ function MenuUploadModal({ auth, isOpen, onClose, onUploadSuccess }) {
           </button>
         </div>
 
-        {/* Form Tab */}
         {activeTab === "form" && (
           <>
             {success && (
@@ -236,17 +309,41 @@ function MenuUploadModal({ auth, isOpen, onClose, onUploadSuccess }) {
               </div>
 
               <div className="form-group">
-                <label htmlFor="dishes">Dishes (comma-separated) *</label>
-                <textarea
-                  id="dishes"
-                  name="dishes"
-                  value={formData.dishes}
-                  onChange={handleChange}
-                  placeholder="e.g., Aloo Paratha, Curd, Pickle"
-                  rows="3"
-                  required
-                />
-                <small>Separate multiple dishes with commas</small>
+                <label>Dish Items *</label>
+                <div className="dish-items-editor">
+                  {formData.dishRows.map((dishRow, index) => (
+                    <div key={`dish-row-${index}`} className="dish-item-row">
+                      <input
+                        type="text"
+                        value={dishRow.name}
+                        onChange={(event) => handleDishRowChange(index, "name", event.target.value)}
+                        placeholder="Dish name"
+                      />
+                      <select
+                        value={providerFoodCategory === "pure_veg" ? "veg" : dishRow.food_type}
+                        onChange={(event) => handleDishRowChange(index, "food_type", event.target.value)}
+                        disabled={providerFoodCategory === "pure_veg"}
+                      >
+                        <option value="veg">Veg</option>
+                        <option value="nonveg">Non-Veg</option>
+                      </select>
+                      <button
+                        type="button"
+                        className="delete-item-btn"
+                        onClick={() => removeDishRow(index)}
+                        disabled={formData.dishRows.length <= 1}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <button type="button" className="tab-btn" onClick={addDishRow}>
+                  + Add Dish Row
+                </button>
+                {providerFoodCategory === "pure_veg" && (
+                  <small>Pure veg profile: all dish tags are locked to veg.</small>
+                )}
               </div>
 
               <button
@@ -260,7 +357,6 @@ function MenuUploadModal({ auth, isOpen, onClose, onUploadSuccess }) {
           </>
         )}
 
-        {/* View Tab */}
         {activeTab === "view" && (
           <>
             {loadingMenu ? (
@@ -282,25 +378,27 @@ function MenuUploadModal({ auth, isOpen, onClose, onUploadSuccess }) {
                         {items.map((item, index) => {
                           const itemId = resolveMenuItemId(item);
                           const reactKey = itemId ?? `${key}-${index}`;
+                          const dishItems = normalizeDishItems(item);
 
                           return (
-                          <div key={reactKey} className="menu-item-card">
-                            <div className="menu-item-content">
-                              <div className="menu-item-dishes">
-                                {Array.isArray(item.dishes) 
-                                  ? item.dishes.join(", ")
-                                  : item.dishes
-                                }
+                            <div key={reactKey} className="menu-item-card">
+                              <div className="menu-item-content">
+                                <div className="menu-item-dishes">
+                                  {dishItems.map((dish, dishIndex) => (
+                                    <span key={`${dish.name}-${dishIndex}`} className={`dish-chip ${dish.food_type === "nonveg" ? "dish-chip--nonveg" : "dish-chip--veg"}`}>
+                                      {dish.food_type === "nonveg" ? "NV" : "V"} {dish.name}
+                                    </span>
+                                  ))}
+                                </div>
                               </div>
+                              <button
+                                className="delete-item-btn"
+                                onClick={() => handleDeleteItem(itemId)}
+                                disabled={itemId === null || deleteLoading === itemId}
+                              >
+                                {deleteLoading === itemId ? "..." : "🗑️"}
+                              </button>
                             </div>
-                            <button
-                              className="delete-item-btn"
-                              onClick={() => handleDeleteItem(itemId)}
-                              disabled={itemId === null || deleteLoading === itemId}
-                            >
-                              {deleteLoading === itemId ? "..." : "🗑️"}
-                            </button>
-                          </div>
                           );
                         })}
                       </div>

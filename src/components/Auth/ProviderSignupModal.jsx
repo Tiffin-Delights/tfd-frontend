@@ -11,6 +11,7 @@ function ProviderSignupModal({ onBack, onClose, onSignupSuccess }) {
     email: "",
     phone: "",
     mess_name: "",
+    providerFoodCategory: "pure_veg",
     city: "",
     delivery_address: "",
     serviceAddressText: "",
@@ -68,6 +69,7 @@ function ProviderSignupModal({ onBack, onClose, onSignupSuccess }) {
         location: form.city.trim(),
         delivery_address: form.delivery_address.trim() || null,
         mess_name: form.mess_name.trim(),
+        provider_food_category: form.providerFoodCategory,
         city: form.city.trim(),
         contact: form.phone.trim(),
         service_address_text: form.serviceAddressText.trim(),
@@ -179,6 +181,21 @@ function ProviderSignupModal({ onBack, onClose, onSignupSuccess }) {
               autoComplete="address-level2"
               required
             />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="prov-signup-food-category">Food Category</label>
+            <select
+              id="prov-signup-food-category"
+              name="providerFoodCategory"
+              value={form.providerFoodCategory}
+              onChange={handleChange}
+              required
+            >
+              <option value="pure_veg">Pure Veg</option>
+              <option value="mixed">Mixed (Veg + Non-Veg)</option>
+            </select>
+            <p className="form-hint">This controls how customers discover your mess in veg/non-veg mode.</p>
           </div>
 
           <div className="form-group">

@@ -27,6 +27,16 @@ class UserRole(str, Enum):
     admin = "admin"
 
 
+class ProviderFoodCategory(str, Enum):
+    pure_veg = "pure_veg"
+    mixed = "mixed"
+
+
+class DishFoodType(str, Enum):
+    veg = "veg"
+    nonveg = "nonveg"
+
+
 class MealType(str, Enum):
     breakfast = "breakfast"
     lunch = "lunch"
@@ -117,6 +127,12 @@ class Provider(Base):
     mess_name: Mapped[str] = mapped_column(String(180), nullable=False, index=True)
     city: Mapped[str] = mapped_column(String(120), nullable=False, index=True)
     contact: Mapped[str] = mapped_column(String(20), nullable=False)
+    provider_food_category: Mapped[ProviderFoodCategory] = mapped_column(
+        SqlEnum(ProviderFoodCategory),
+        nullable=False,
+        server_default=ProviderFoodCategory.mixed.value,
+        index=True,
+    )
     service_address_text: Mapped[str | None] = mapped_column(String(255), nullable=True)
     service_place_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
     service_latitude: Mapped[Decimal | None] = mapped_column(Numeric(9, 6), nullable=True)
@@ -146,6 +162,7 @@ class MenuItem(Base):
     day: Mapped[DayOfWeek] = mapped_column(SqlEnum(DayOfWeek), nullable=False)
     meal_type: Mapped[MealType] = mapped_column(SqlEnum(MealType), nullable=False)
     dishes: Mapped[list[str]] = mapped_column(JSONB, nullable=False)
+    dish_items: Mapped[list[dict[str, str]]] = mapped_column(JSONB, nullable=False, default=list)
     price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     image_url: Mapped[str | None] = mapped_column(Text, nullable=True)
 

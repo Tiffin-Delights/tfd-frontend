@@ -3,6 +3,8 @@ from __future__ import annotations
 from datetime import date, timedelta
 from decimal import Decimal
 from pathlib import Path
+import random
+import re
 import sys
 
 BASE_DIR = Path(__file__).resolve().parents[1]
@@ -13,6 +15,7 @@ from app.core.security import hash_password
 from app.db import SessionLocal
 from app.models import (
     DayOfWeek,
+    DishFoodType,
     Feedback,
     MealType,
     MenuItem,
@@ -20,12 +23,47 @@ from app.models import (
     OrderType,
     PaymentStatus,
     Provider,
+    ProviderFoodCategory,
     Subscription,
     SubscriptionPlan,
     SubscriptionStatus,
     User,
     UserRole,
 )
+
+
+NON_VEG_KEYWORDS = {
+    "chicken",
+    "mutton",
+    "fish",
+    "prawn",
+    "prawns",
+    "egg",
+    "eggs",
+    "meat",
+    "keema",
+    "biryani",
+}
+
+VEG_KEYWORDS = {
+    "paneer",
+    "dal",
+    "rajma",
+    "chole",
+    "chana",
+    "veg",
+    "vegetable",
+    "aloo",
+    "palak",
+    "kadhi",
+    "kofta",
+    "mushroom",
+    "soya",
+    "tofu",
+    "salad",
+}
+
+SEED_RANDOM = random.Random(20260426)
 
 
 PROVIDERS: list[dict] = [
@@ -567,6 +605,43 @@ DAYS = list(DayOfWeek)
 MEALS = [MealType.breakfast, MealType.lunch, MealType.snacks, MealType.dinner]
 
 
+def _contains_keyword(text_value: str, keywords: set[str]) -> bool:
+    normalized = re.sub(r"\s+", " ", text_value.strip().lower())
+    return any(keyword in normalized for keyword in keywords)
+
+
+def _assign_provider_category(provider_data: dict) -> ProviderFoodCategory:
+    cuisine = provider_data.get("cuisine")
+    if cuisine == "gujarati":
+        return ProviderFoodCategory.pure_veg
+    if cuisine == "awadhi":
+        return ProviderFoodCategory.mixed
+    return ProviderFoodCategory.pure_veg if SEED_RANDOM.random() < 0.55 else ProviderFoodCategory.mixed
+
+
+def _guess_dish_food_type(dish_name: str, provider_category: ProviderFoodCategory) -> DishFoodType:
+    if provider_category == ProviderFoodCategory.pure_veg:
+        return DishFoodType.veg
+
+    normalized = str(dish_name or "").strip().lower()
+    if _contains_keyword(normalized, NON_VEG_KEYWORDS):
+        return DishFoodType.nonveg
+    if _contains_keyword(normalized, VEG_KEYWORDS):
+        return DishFoodType.veg
+    return DishFoodType.veg if SEED_RANDOM.random() < 0.8 else DishFoodType.nonveg
+
+
+def _build_dish_items(dishes: list[str], provider_category: ProviderFoodCategory) -> list[dict[str, str]]:
+    return [
+        {
+            "name": str(dish).strip(),
+            "food_type": _guess_dish_food_type(str(dish), provider_category).value,
+        }
+        for dish in dishes
+        if str(dish).strip()
+    ]
+
+
 def upsert_user(session, *, name: str, email: str, phone: str, role: UserRole, location: str, delivery_address: str | None) -> tuple[User, bool]:
     user = session.query(User).filter(User.email == email).first()
     created = False
@@ -603,6 +678,7 @@ def upsert_provider(session, provider_user: User, provider_data: dict) -> tuple[
             mess_name=provider_data["mess_name"],
             city=provider_data["city"],
             contact=provider_data["contact"],
+            provider_food_category=provider_data["provider_food_category"],
             weekly_price=provider_data["weekly_price"],
             monthly_price=provider_data["monthly_price"],
             rating=Decimal("0"),
@@ -615,6 +691,7 @@ def upsert_provider(session, provider_user: User, provider_data: dict) -> tuple[
         provider.mess_name = provider_data["mess_name"]
         provider.city = provider_data["city"]
         provider.contact = provider_data["contact"]
+        provider.provider_food_category = provider_data["provider_food_category"]
         provider.weekly_price = provider_data["weekly_price"]
         provider.monthly_price = provider_data["monthly_price"]
     return provider, created
@@ -627,6 +704,7 @@ def upsert_menu_for_provider(session, provider: Provider, cuisine: str) -> tuple
     for day_idx, day in enumerate(DAYS):
         for meal in MEALS:
             dishes = template[meal][day_idx]
+            dish_items = _build_dish_items(dishes, provider.provider_food_category)
             existing = (
                 session.query(MenuItem)
                 .filter(
@@ -638,6 +716,7 @@ def upsert_menu_for_provider(session, provider: Provider, cuisine: str) -> tuple
             )
             if existing:
                 existing.dishes = dishes
+                existing.dish_items = dish_items
                 existing.price = Decimal("0")
                 updated += 1
             else:
@@ -647,6 +726,7 @@ def upsert_menu_for_provider(session, provider: Provider, cuisine: str) -> tuple
                         day=day,
                         meal_type=meal,
                         dishes=dishes,
+                        dish_items=dish_items,
                         price=Decimal("0"),
                         image_url=None,
                     )
@@ -780,6 +860,7 @@ def backfill_provider_if_needed(session, provider: Provider, customers: list[Use
                         day=day,
                         meal_type=meal,
                         dishes=template[meal][day_idx],
+                        dish_items=_build_dish_items(template[meal][day_idx], provider.provider_food_category),
                         price=Decimal("0"),
                         image_url=None,
                     )
@@ -834,6 +915,7 @@ def seed_providers() -> None:
         ]
 
         for idx, provider_data in enumerate(PROVIDERS):
+            provider_data["provider_food_category"] = _assign_provider_category(provider_data)
             provider_user, created_user = upsert_user(
                 session,
                 name=provider_data["name"],

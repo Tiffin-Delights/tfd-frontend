@@ -10,8 +10,8 @@ function MenuList({ title, items }) {
     <div className="menu-block">
       <h4>{title}</h4>
       <ul>
-        {items.map((item) => (
-          <li key={item}>{item}</li>
+        {items.map((item, index) => (
+          <li key={`${title}-${index}`}>{item}</li>
         ))}
       </ul>
     </div>
@@ -87,6 +87,7 @@ function getProviderSearchText(provider) {
     provider?.location,
     provider?.address,
     provider?.description,
+    provider?.provider_food_category === "pure_veg" ? "pure veg" : "mixed non veg",
     provider?.weekly_price > 0 ? "weekly budget affordable" : "",
     provider?.monthly_price > 0 ? "monthly plan" : "",
     provider?.rating >= 4 ? "top rated best" : "",
@@ -260,7 +261,14 @@ function MessProviders({ auth, onSubscriptionCreated, onAuthUserUpdate, dietThem
 
     menuItems.forEach((item) => {
       const day = String(item.day || "").slice(0, 3).toUpperCase();
-      const dishes = Array.isArray(item.dishes) ? item.dishes.join(", ") : "Menu not available";
+      const dishItems = Array.isArray(item.dish_items) && item.dish_items.length > 0
+        ? item.dish_items
+        : (Array.isArray(item.dishes) ? item.dishes.map((dish) => ({ name: dish, food_type: "veg" })) : []);
+      const dishes = dishItems.length > 0
+        ? dishItems
+            .map((dish) => `${dish.food_type === "nonveg" ? "NV" : "V"} ${dish.name}`)
+            .join(", ")
+        : "Menu not available";
       const line = `${day}: ${dishes}`;
       if (grouped[item.meal_type]) {
         grouped[item.meal_type].push(line);
@@ -383,11 +391,11 @@ function MessProviders({ auth, onSubscriptionCreated, onAuthUserUpdate, dietThem
     <section className="mess-providers" id="mess-providers">
       <div className="section-head">
         <h2>Find Mess Near you...</h2>
-        {/* <p className="lede">
+        <p className="lede">
           {dietTheme === "veg"
-            ? "Veg mode is on, so suggestions only show providers that appear to offer vegetarian meals."
-            : "Click on Details to see the full menu of any mess provider."}
-        </p> */}
+            ? "Veg mode is on. Showing only pure veg providers."
+            : "Non-veg mode is on. Showing mixed providers (veg + non-veg)."}
+        </p>
       </div>
 
       <div className="providers-controls">
@@ -525,6 +533,9 @@ function MessProviders({ auth, onSubscriptionCreated, onAuthUserUpdate, dietThem
                         <strong>Rating:</strong> <StarRating value={provider.rating} size="sm" showValue />
                       </div>
                       <p>
+                        <strong>Category:</strong> {provider.provider_food_category === "pure_veg" ? "Pure Veg" : "Mixed (Veg + Non-Veg)"}
+                      </p>
+                      <p>
                         <strong>Contact:</strong> {String(provider.contact || "-")}
                       </p>
                     </div>
@@ -604,6 +615,7 @@ function MessProviders({ auth, onSubscriptionCreated, onAuthUserUpdate, dietThem
           <div className="provider-details__intro">
             <div>
               <p><strong>Rating:</strong> <StarRating value={selectedProvider.rating} size="sm" showValue /></p>
+              <p><strong>Category:</strong> {selectedProvider.provider_food_category === "pure_veg" ? "Pure Veg" : "Mixed (Veg + Non-Veg)"}</p>
               <p><strong>Contact:</strong> {selectedProvider.contact}</p>
             </div>
             <div>
