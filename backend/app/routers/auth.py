@@ -11,7 +11,6 @@ from app.db import get_db
 from app.models import Provider, User, UserRole
 from app.schemas import (
     LoginRequest,
-    MessageResponse,
     PasswordResetOtpConfirmResponse,
     PasswordResetOtpConfirmRequest,
     PasswordResetOtpRequest,
@@ -124,6 +123,7 @@ def register(payload: UserRegisterRequest, db: Session = Depends(get_db)):
     if payload.role == UserRole.provider:
         if (
             not payload.mess_name
+            or payload.provider_food_category is None
             or not payload.city
             or not payload.service_address_text
             or not payload.service_place_id
@@ -133,13 +133,14 @@ def register(payload: UserRegisterRequest, db: Session = Depends(get_db)):
         ):
             raise HTTPException(
                 status_code=400,
-                detail="Provider registration requires service location and delivery radius",
+                detail="Provider registration requires food category, service location, and delivery radius",
             )
 
         provider_profile = Provider(
             owner_user_id=user.user_id,
             owner_name=payload.name,
             mess_name=payload.mess_name,
+            provider_food_category=payload.provider_food_category,
             city=payload.city,
             contact=payload.contact or payload.phone,
             service_address_text=payload.service_address_text,

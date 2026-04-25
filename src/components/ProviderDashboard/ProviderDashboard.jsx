@@ -542,6 +542,7 @@ function ProviderDashboard({ auth }) {
       <MenuUploadModal
         auth={auth}
         providerId={profileData?.provider_id}
+        providerFoodCategory={profileData?.provider_food_category || "mixed"}
         isOpen={activeModal === "menu"}
         onClose={() => setActiveModal(null)}
         onUploadSuccess={() => setActiveModal(null)}

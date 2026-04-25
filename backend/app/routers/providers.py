@@ -14,6 +14,7 @@ from app.models import (
     MenuItem,
     Order,
     Provider,
+    ProviderFoodCategory,
     ProviderPhoto,
     SubscriptionMeal,
     SubscriptionMealStatus,
@@ -45,61 +46,11 @@ from app.services import (
 
 router = APIRouter(prefix="/providers", tags=["Providers"])
 
-NON_VEG_KEYWORDS = {
-    "chicken",
-    "mutton",
-    "fish",
-    "prawn",
-    "prawns",
-    "egg",
-    "eggs",
-    "meat",
-    "keema",
-    "biryani",
-}
-VEG_KEYWORDS = {
-    "paneer",
-    "dal",
-    "rajma",
-    "chole",
-    "chana",
-    "veg",
-    "vegetable",
-    "aloo",
-    "palak",
-    "kadhi",
-    "kofta",
-    "mushroom",
-    "soya",
-    "tofu",
-    "salad",
-}
-
 
 def _format_rating(value: Decimal | float | None) -> Decimal:
     if value in (None, ""):
         return Decimal("0.0")
     return Decimal(str(value)).quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
-
-
-def _provider_offers_veg(provider: Provider) -> bool:
-    dishes = [
-        str(dish).strip().lower()
-        for menu_item in provider.menu_items
-        for dish in (menu_item.dishes or [])
-        if str(dish).strip()
-    ]
-
-    if not dishes:
-        return True
-
-    has_veg_dish = any(keyword in dish for dish in dishes for keyword in VEG_KEYWORDS)
-    has_non_veg_dish = any(keyword in dish for dish in dishes for keyword in NON_VEG_KEYWORDS)
-
-    if has_veg_dish:
-        return True
-
-    return not has_non_veg_dish
 
 
 def _to_decimal(value: float | Decimal | None, digits: str = "0.01") -> Decimal | None:
@@ -160,6 +111,7 @@ def _serialize_provider(
         mess_name=provider.mess_name,
         city=provider.city,
         contact=provider.contact,
+        provider_food_category=provider.provider_food_category,
         service_address_text=provider.service_address_text,
         service_place_id=provider.service_place_id,
         service_latitude=provider.service_latitude,
@@ -210,18 +162,20 @@ def list_providers(
 
     query = (
         db.query(Provider, computed_rating.label("computed_rating"))
-        .options(selectinload(Provider.menu_items), selectinload(Provider.photos))
+        .options(selectinload(Provider.photos))
         .outerjoin(ratings_subquery, Provider.provider_id == ratings_subquery.c.provider_id)
     )
     if city:
         query = query.filter(Provider.city.ilike(f"%{city}%"))
+    if diet_mode == "veg":
+        query = query.filter(Provider.provider_food_category == ProviderFoodCategory.pure_veg)
+    elif diet_mode == "nonveg":
+        query = query.filter(Provider.provider_food_category == ProviderFoodCategory.mixed)
 
     results = query.order_by(computed_rating.desc(), Provider.provider_id.desc()).all()
 
     providers: list[ProviderResponse] = []
     for provider, rating_value in results:
-        if diet_mode == "veg" and not _provider_offers_veg(provider):
-            continue
         if customer_latitude is not None or customer_longitude is not None:
             if customer_latitude is None or customer_longitude is None:
                 continue
@@ -340,6 +294,7 @@ def get_provider_profile(
         "mess_name": provider.mess_name,
         "city": provider.city,
         "contact": provider.contact,
+        "provider_food_category": provider.provider_food_category,
         "service_address_text": provider.service_address_text,
         "service_place_id": provider.service_place_id,
         "service_latitude": provider.service_latitude,

@@ -100,6 +100,13 @@ export function validateProviderSignupForm(form) {
     return "Mess/Restaurant name must be at least 2 characters.";
   }
 
+  if (![
+    "pure_veg",
+    "mixed",
+  ].includes(String(form.providerFoodCategory || "").trim())) {
+    return "Please select your food category (Pure Veg or Mixed).";
+  }
+
   if (isBlank(form.email)) {
     return "Email is required.";
   }

@@ -84,6 +84,30 @@
   margin-top: 4px;
 }
 
+.dish-items-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dish-item-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 150px auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.dish-item-row .delete-item-btn {
+  font-size: 1rem;
+  border: 1px solid var(--panel-card-border);
+  border-radius: 8px;
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .submit-btn {
   padding: 12px 20px;
   background: linear-gradient(135deg, var(--snake-primary-start), var(--snake-primary-end));
@@ -156,9 +180,32 @@
 }
 
 .menu-item-dishes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
   color: var(--text-body);
   font-weight: 500;
   word-break: break-word;
+}
+
+.dish-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.85rem;
+  border: 1px solid var(--panel-card-border);
+}
+
+.dish-chip--veg {
+  background: color-mix(in srgb, #2f8b3a 16%, #ffffff);
+  color: #1e5a27;
+}
+
+.dish-chip--nonveg {
+  background: color-mix(in srgb, #9e2f2f 16%, #ffffff);
+  color: #7b2323;
 }
 
 .delete-item-btn {
@@ -214,6 +261,10 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
+  }
+
+  .dish-item-row {
+    grid-template-columns: 1fr;
   }
 
   .delete-item-btn {
