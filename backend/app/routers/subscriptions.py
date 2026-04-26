@@ -1,7 +1,7 @@
 from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import func, or_
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.db import get_db
@@ -9,8 +9,6 @@ from app.deps import get_current_user, require_roles
 from app.models import (
     Feedback,
     Order,
-    OrderType,
-    Payment,
     PaymentStatus,
     Provider,
     Subscription,
@@ -340,89 +338,54 @@ def delete_subscription(
     )
     if not subscription:
         raise HTTPException(status_code=404, detail="Subscription not found.")
+    if subscription.status != SubscriptionStatus.active:
+        raise HTTPException(status_code=400, detail="Only active subscriptions can be cancelled.")
 
     meals = (
         db.query(SubscriptionMeal)
         .filter(SubscriptionMeal.subscription_id == subscription.subscription_id)
         .all()
     )
-    meal_ids = [meal.subscription_meal_id for meal in meals]
-
-    orders = (
-        db.query(Order)
-        .filter(
-            Order.user_id == subscription.user_id,
-            Order.provider_id == subscription.provider_id,
-            Order.order_type == OrderType.subscription,
-            Order.start_date == subscription.start_date,
-            Order.end_date == subscription.end_date,
-        )
-        .all()
-    )
-    order_ids = [order.order_id for order in orders]
-
-    wallet_transactions = []
-    if meal_ids or order_ids:
-        filters = []
-        if meal_ids:
-            filters.append(
-                (WalletTransaction.source_type == "meal_cancellation")
-                & (WalletTransaction.source_id.in_(meal_ids))
-            )
-        if order_ids:
-            filters.append(
-                (WalletTransaction.source_type == "order_payment")
-                & (WalletTransaction.source_id.in_(order_ids))
-            )
-
-        wallet_transactions = (
-            db.query(WalletTransaction)
-            .filter(
-                WalletTransaction.user_id == current_user.user_id,
-                or_(*filters),
-            )
-            .all()
-        )
+    scheduled_meals = [meal for meal in meals if meal.status == SubscriptionMealStatus.scheduled]
+    if not scheduled_meals:
+        raise HTTPException(status_code=400, detail="This subscription has no scheduled meals left to cancel.")
 
     wallet = get_or_create_wallet(db, current_user)
-    adjusted_wallet_balance = quantize_money(wallet.balance)
-    for transaction in wallet_transactions:
-        if transaction.transaction_type == WalletTransactionType.credit:
-            adjusted_wallet_balance = quantize_money(adjusted_wallet_balance - transaction.amount)
-        else:
-            adjusted_wallet_balance = quantize_money(adjusted_wallet_balance + transaction.amount)
+    current_time = now_utc()
+    refunded_amount = quantize_money("0")
+    refunded_meal_count = 0
 
-    if adjusted_wallet_balance < 0:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="This subscription cannot be deleted because wallet credits from it have already been used.",
-        )
+    for meal in scheduled_meals:
+        meal.status = SubscriptionMealStatus.cancelled
+        meal.cancelled_at = current_time
+        db.add(meal)
 
-    wallet.balance = adjusted_wallet_balance
-    db.add(wallet)
+        if current_time <= meal.cutoff_at:
+            refunded_amount = quantize_money(refunded_amount + meal.unit_price)
+            refunded_meal_count += 1
+            record_wallet_transaction(
+                db,
+                wallet,
+                WalletTransactionType.credit,
+                meal.unit_price,
+                source_type="meal_cancellation",
+                source_id=meal.subscription_meal_id,
+                note=(
+                    f"Credit for subscription cancellation: {meal.meal_type.value} "
+                    f"on {meal.service_date.isoformat()}"
+                ),
+            )
 
-    deleted_payment_count = 0
-    if order_ids:
-        payments = db.query(Payment).filter(Payment.order_id.in_(order_ids)).all()
-        for payment in payments:
-            db.delete(payment)
-        deleted_payment_count = len(payments)
-
-    for transaction in wallet_transactions:
-        db.delete(transaction)
-
-    for order in orders:
-        db.delete(order)
-
-    db.delete(subscription)
+    subscription.status = SubscriptionStatus.cancelled
+    db.add(subscription)
     db.commit()
 
     return {
         "subscription_id": subscription_id,
-        "deleted_meal_count": len(meal_ids),
-        "deleted_order_count": len(order_ids),
-        "deleted_payment_count": deleted_payment_count,
-        "deleted_wallet_transaction_count": len(wallet_transactions),
+        "status": subscription.status,
+        "cancelled_meal_count": len(scheduled_meals),
+        "refunded_meal_count": refunded_meal_count,
+        "refunded_amount": refunded_amount,
         "wallet_balance": wallet.balance,
     }
 

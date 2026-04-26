@@ -287,7 +287,7 @@ function CustomerDashboard({ auth, refreshKey = 0 }) {
 
   const handleSubscriptionDelete = async (subscription) => {
     const confirmed = window.confirm(
-      `Cancel the ${subscription.plan_type} subscription for ${subscription.customer_name}? This will delete the subscription and its related records.`,
+      `Cancel the ${subscription.plan_type} subscription for ${subscription.customer_name}? Eligible unused meals will be returned to your wallet as store credit.`,
     );
 
     if (!confirmed) {
@@ -297,8 +297,13 @@ function CustomerDashboard({ auth, refreshKey = 0 }) {
     try {
       setDeletingSubscriptionId(subscription.subscription_id);
       setError(null);
-      await deleteSubscription(auth?.token, subscription.subscription_id);
+      const result = await deleteSubscription(auth?.token, subscription.subscription_id);
       await fetchData();
+      if (result) {
+        window.alert(
+          `Subscription cancelled. Refunded ₹${Number(result.refunded_amount || 0).toFixed(2)} to your wallet for ${result.refunded_meal_count || 0} eligible meals.`,
+        );
+      }
     } catch (err) {
       setError(err.message || "Failed to cancel subscription");
     } finally {

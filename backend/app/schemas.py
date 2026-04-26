@@ -337,10 +337,10 @@ class SubscriptionMealCancelResponse(BaseModel):
 
 class SubscriptionDeleteResponse(BaseModel):
     subscription_id: int
-    deleted_meal_count: int
-    deleted_order_count: int
-    deleted_payment_count: int
-    deleted_wallet_transaction_count: int
+    status: SubscriptionStatus
+    cancelled_meal_count: int
+    refunded_meal_count: int
+    refunded_amount: Decimal
     wallet_balance: Decimal
 
 
