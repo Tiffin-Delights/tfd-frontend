@@ -105,10 +105,10 @@ function MyNavbar({
               type="button"
               className={`diet-toggle ${dietTheme === "veg" ? "is-veg" : "is-nonveg"}`}
               onClick={onThemeToggle}
-              aria-label={`Switch to ${dietTheme === "veg" ? "non-veg" : "veg"} theme`}
+              aria-label={dietTheme === "veg" ? "Show all providers" : "Show only veg providers"}
               aria-pressed={dietTheme === "veg"}
             >
-              <span className="diet-toggle__label diet-toggle__label--left">Non-Veg</span>
+              <span className="diet-toggle__label diet-toggle__label--left" aria-hidden="true" />
               <span className="diet-toggle__track" aria-hidden="true">
                 <span className="diet-toggle__thumb" />
               </span>

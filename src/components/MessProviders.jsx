@@ -394,7 +394,7 @@ function MessProviders({ auth, onSubscriptionCreated, onAuthUserUpdate, dietThem
         <p className="lede">
           {dietTheme === "veg"
             ? "Veg mode is on. Showing only pure veg providers."
-            : "Non-veg mode is on. Showing mixed providers (veg + non-veg)."}
+            : "Showing all providers, including veg and non-veg options."}
         </p>
       </div>
 

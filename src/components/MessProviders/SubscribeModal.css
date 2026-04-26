@@ -27,6 +27,13 @@
   animation: slideUp 0.3s ease-out;
 }
 
+.subscribe-modal__body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
 @keyframes slideUp {
   from {
     opacity: 0;
@@ -348,6 +355,192 @@
   font-size: 18px;
 }
 
+.demo-payment-subtitle {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.demo-payment-card {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 18px;
+  align-items: center;
+  padding: 18px;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--text-accent) 18%, transparent), transparent 42%),
+    linear-gradient(145deg, color-mix(in srgb, var(--text-accent) 9%, #ffffff), #fffdf8);
+  border: 1px solid color-mix(in srgb, var(--text-accent) 22%, transparent);
+}
+
+.demo-qr-shell {
+  position: relative;
+  padding: 16px;
+  border-radius: 20px;
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.1);
+}
+
+.demo-qr-grid {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 4px;
+  aspect-ratio: 1;
+}
+
+.demo-qr-grid span {
+  border-radius: 2px;
+  background: #ebeff3;
+}
+
+.demo-qr-grid span.is-filled {
+  background: #111827;
+}
+
+.demo-qr-corners {
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  border: 5px solid #111827;
+  border-radius: 10px;
+}
+
+.demo-qr-corners--top-left {
+  top: 12px;
+  left: 12px;
+}
+
+.demo-qr-corners--top-right {
+  top: 12px;
+  right: 12px;
+}
+
+.demo-qr-corners--bottom-left {
+  bottom: 12px;
+  left: 12px;
+}
+
+.demo-payment-meta h3 {
+  margin: 10px 0 4px;
+  color: var(--text-strong);
+  font-size: 1.25rem;
+}
+
+.demo-payment-meta p {
+  margin: 0;
+  color: var(--text-body);
+}
+
+.demo-payment-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--state-warn-text) 12%, #fff6d8);
+  color: var(--state-warn-text);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.demo-payment-amount {
+  margin-top: 14px;
+  color: var(--text-accent);
+  font-size: 2rem;
+  font-weight: 800;
+}
+
+.demo-upi-panel {
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: var(--panel-muted-bg);
+  border: 1px solid var(--panel-card-border);
+}
+
+.demo-upi-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 0;
+  color: var(--text-body);
+  border-bottom: 1px solid color-mix(in srgb, var(--text-accent) 10%, transparent);
+}
+
+.demo-upi-row:last-child {
+  border-bottom: none;
+}
+
+.demo-upi-row strong {
+  color: var(--text-strong);
+  text-align: right;
+}
+
+.demo-payment-note {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--text-accent) 6%, #ffffff);
+  border: 1px dashed color-mix(in srgb, var(--text-accent) 24%, transparent);
+  color: var(--text-body);
+  font-size: 14px;
+}
+
+.subscribe-modal--success {
+  max-width: 460px;
+}
+
+.demo-success {
+  padding: 36px 28px;
+  text-align: center;
+}
+
+.demo-success__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 78px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: var(--state-success-bg);
+  color: var(--state-success-text);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.demo-success h2 {
+  margin: 18px 0 10px;
+  color: var(--text-strong);
+  font-size: 1.8rem;
+}
+
+.demo-success p {
+  margin: 0;
+  color: var(--text-body);
+  line-height: 1.6;
+}
+
+.demo-success__summary {
+  margin-top: 20px;
+  padding: 16px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--text-accent) 7%, #ffffff);
+  border: 1px solid color-mix(in srgb, var(--text-accent) 20%, transparent);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.demo-success__summary span {
+  color: var(--text-body);
+}
+
+.demo-success__summary strong {
+  color: var(--text-accent);
+}
+
 /* Provider Info */
 .provider-info {
   padding: 12px;
@@ -436,5 +629,23 @@
 
   .form-actions {
     flex-direction: column;
+  }
+
+  .demo-payment-card {
+    grid-template-columns: 1fr;
+  }
+
+  .demo-qr-shell {
+    max-width: 240px;
+    margin: 0 auto;
+  }
+
+  .demo-upi-row {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .demo-upi-row strong {
+    text-align: left;
   }
 }

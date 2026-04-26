@@ -131,7 +131,7 @@ export async function listProviders(token, city, dietMode, customerLocation) {
     params.set("city", city);
   }
 
-  if (dietMode === "veg" || dietMode === "nonveg") {
+  if (dietMode === "veg") {
     params.set("diet_mode", dietMode);
   }
 
@@ -152,7 +152,7 @@ export async function listPublicTopProviders(limit = 5, dietMode) {
     params.set("limit", String(limit));
   }
 
-  if (dietMode === "veg" || dietMode === "nonveg") {
+  if (dietMode === "veg") {
     params.set("diet_mode", dietMode);
   }
 
