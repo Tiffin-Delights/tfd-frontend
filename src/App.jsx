@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import "./App.css";
 import MyNavbar from "./components/Navbar/Navbar";
 import Footer from "./components/Footer/footer";
@@ -12,6 +12,18 @@ import FAQ from "./components/FAQ";
 import MessProviders from "./components/MessProviders";
 import ProviderDashboard from "./components/ProviderDashboard/ProviderDashboard";
 import CustomerDashboard from "./components/CustomerDashboard/CustomerDashboard";
+import PublicProviderDetails from "./components/PublicProviderDetails";
+
+const AUTO_LOGOUT_AFTER_MS = 3 * 60 * 1000;
+
+function readPublicProviderRoute() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const match = window.location.pathname.match(/^\/providers\/(\d+)$/);
+  return match ? Number(match[1]) : null;
+}
 
 function App() {
   const [dietTheme, setDietTheme] = useState(() => {
@@ -32,6 +44,22 @@ function App() {
   const [, setShowProvidersPage] = useState(Boolean(auth?.token));
   const [showCustomerDashboard, setShowCustomerDashboard] = useState(false);
   const [customerDashboardRefreshKey, setCustomerDashboardRefreshKey] = useState(0);
+  const [publicProviderId, setPublicProviderId] = useState(() =>
+    readPublicProviderRoute(),
+  );
+  const inactivityTimeoutRef = useRef(null);
+
+  const logoutUser = useCallback(() => {
+    try {
+      localStorage.removeItem("tfd_auth");
+    } catch {
+      // ignore storage write issues
+    }
+
+    setAuth(null);
+    setShowProvidersPage(false);
+    setShowCustomerDashboard(false);
+  }, []);
 
   const handleLoginSuccess = (loginResult) => {
     if (!loginResult?.access_token || !loginResult?.user) {
@@ -73,10 +101,77 @@ function App() {
     }
   }, [dietTheme]);
 
+  useEffect(() => {
+    if (!auth?.token) {
+      if (inactivityTimeoutRef.current) {
+        window.clearTimeout(inactivityTimeoutRef.current);
+        inactivityTimeoutRef.current = null;
+      }
+      return undefined;
+    }
+
+    const resetInactivityTimer = () => {
+      if (inactivityTimeoutRef.current) {
+        window.clearTimeout(inactivityTimeoutRef.current);
+      }
+
+      inactivityTimeoutRef.current = window.setTimeout(() => {
+        logoutUser();
+      }, AUTO_LOGOUT_AFTER_MS);
+    };
+
+    const activityEvents = [
+      "mousedown",
+      "mousemove",
+      "keydown",
+      "scroll",
+      "touchstart",
+      "click",
+    ];
+
+    resetInactivityTimer();
+    activityEvents.forEach((eventName) => {
+      window.addEventListener(eventName, resetInactivityTimer, true);
+    });
+
+    return () => {
+      if (inactivityTimeoutRef.current) {
+        window.clearTimeout(inactivityTimeoutRef.current);
+        inactivityTimeoutRef.current = null;
+      }
+
+      activityEvents.forEach((eventName) => {
+        window.removeEventListener(eventName, resetInactivityTimer, true);
+      });
+    };
+  }, [auth?.token, logoutUser]);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setPublicProviderId(readPublicProviderRoute());
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  const openPublicProviderPage = useCallback((providerId) => {
+    window.history.pushState({}, "", `/providers/${providerId}`);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    setPublicProviderId(providerId);
+  }, []);
+
+  const goToHomePage = useCallback(() => {
+    window.history.pushState({}, "", "/");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    setPublicProviderId(null);
+  }, []);
+
   return (
     <>
       <MyNavbar
         onLoginSuccess={handleLoginSuccess}
+        onLogout={logoutUser}
         auth={auth}
         setAuth={setAuth}
         dietTheme={dietTheme}
@@ -112,6 +207,11 @@ function App() {
               />
             )}
           </>
+        ) : publicProviderId ? (
+          <PublicProviderDetails
+            providerId={publicProviderId}
+            onBack={goToHomePage}
+          />
         ) : (
           <>
             <Hero dietTheme={dietTheme} />
@@ -119,7 +219,10 @@ function App() {
             {/* <Plans /> */}
             <HowItWorks dietTheme={dietTheme} />
             <Menu />
-            <Testimonials />
+            <Testimonials
+              dietTheme={dietTheme}
+              onOpenProvider={openPublicProviderPage}
+            />
             <FAQ />
           </>
         )}

@@ -170,6 +170,67 @@
   gap: 20px;
 }
 
+.meal-schedule-grid--single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.meal-schedule-provider-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.meal-schedule-provider-nav__status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+  flex: 1;
+}
+
+.meal-schedule-provider-nav__status span {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.meal-schedule-provider-nav__status strong {
+  color: var(--text-strong);
+  font-size: 1rem;
+}
+
+.meal-schedule-provider-nav__button {
+  border: 1px solid var(--panel-card-border);
+  background: var(--panel-card-bg);
+  color: var(--text-accent);
+  border-radius: 999px;
+  width: 48px;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.meal-schedule-provider-nav__button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-panel);
+}
+
+.meal-schedule-provider-nav__button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .meal-schedule-card {
   background: var(--panel-card-bg);
   border-radius: 18px;
@@ -772,6 +833,15 @@
 
   .meal-schedule-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .meal-schedule-provider-nav {
+    gap: 10px;
+  }
+
+  .meal-schedule-provider-nav__button {
+    width: 42px;
+    height: 42px;
   }
 
   .meal-timeline {

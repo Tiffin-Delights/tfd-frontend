@@ -128,6 +128,74 @@ def _serialize_provider(
     )
 
 
+@router.get("/public/top", response_model=list[ProviderResponse])
+def list_public_top_providers(
+    limit: int = Query(default=5, ge=1, le=10),
+    diet_mode: str | None = Query(default=None, pattern="^(veg|nonveg)$"),
+    db: Session = Depends(get_db),
+):
+    ratings_subquery = (
+        db.query(
+            Feedback.provider_id.label("provider_id"),
+            func.avg(Feedback.rating).label("avg_rating"),
+        )
+        .group_by(Feedback.provider_id)
+        .subquery()
+    )
+
+    computed_rating = func.coalesce(ratings_subquery.c.avg_rating, 0)
+    results = (
+        db.query(Provider, computed_rating.label("computed_rating"))
+        .options(selectinload(Provider.menu_items), selectinload(Provider.photos))
+        .outerjoin(ratings_subquery, Provider.provider_id == ratings_subquery.c.provider_id)
+        .order_by(computed_rating.desc(), Provider.provider_id.desc())
+        .all()
+    )
+
+    providers: list[ProviderResponse] = []
+    for provider, rating_value in results:
+        if diet_mode == "veg" and provider.provider_food_category != ProviderFoodCategory.pure_veg:
+            continue
+        if diet_mode == "nonveg" and provider.provider_food_category != ProviderFoodCategory.non_veg:
+            continue
+
+        providers.append(_serialize_provider(provider, rating_value))
+        if len(providers) >= limit:
+            break
+
+    return providers
+
+
+@router.get("/public/{provider_id}", response_model=ProviderResponse)
+def get_public_provider(
+    provider_id: int,
+    db: Session = Depends(get_db),
+):
+    ratings_subquery = (
+        db.query(
+            Feedback.provider_id.label("provider_id"),
+            func.avg(Feedback.rating).label("avg_rating"),
+        )
+        .group_by(Feedback.provider_id)
+        .subquery()
+    )
+
+    computed_rating = func.coalesce(ratings_subquery.c.avg_rating, 0)
+    result = (
+        db.query(Provider, computed_rating.label("computed_rating"))
+        .options(selectinload(Provider.menu_items), selectinload(Provider.photos))
+        .outerjoin(ratings_subquery, Provider.provider_id == ratings_subquery.c.provider_id)
+        .filter(Provider.provider_id == provider_id)
+        .first()
+    )
+
+    if not result:
+        raise HTTPException(status_code=404, detail="Provider not found")
+
+    provider, rating_value = result
+    return _serialize_provider(provider, rating_value)
+
+
 @router.post("/create", response_model=ProviderResponse, status_code=status.HTTP_201_CREATED)
 def create_provider(
     payload: ProviderCreateRequest,

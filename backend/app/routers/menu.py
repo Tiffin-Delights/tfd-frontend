@@ -170,6 +170,24 @@ def get_provider_menu(
     return items
 
 
+@router.get("/public/provider/{provider_id}", response_model=list[MenuItemResponse])
+def get_public_provider_menu(
+    provider_id: int,
+    db: Session = Depends(get_db),
+):
+    """Get menu items for a specific provider without authentication."""
+    provider = db.get(Provider, provider_id)
+    if not provider:
+        raise HTTPException(status_code=404, detail="Provider not found")
+
+    return (
+        db.query(MenuItem)
+        .filter(MenuItem.provider_id == provider_id)
+        .order_by(MenuItem.day, MenuItem.meal_type)
+        .all()
+    )
+
+
 @router.delete("/{menu_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_menu_item(
     menu_id: int,
@@ -188,4 +206,3 @@ def delete_menu_item(
     db.delete(menu_item)
     db.commit()
     return None
-

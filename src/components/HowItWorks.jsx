@@ -100,23 +100,23 @@ function HowItWorks({ dietTheme = "nonveg" }) {
   const consumerSteps = [
     {
       title: "Sign Up",
-      copy: "Create account fast",
-      image: createIllustration({ ...illustrationTheme, accent: illustrationTheme.accents[0], label: "Quick Start", icon: "👤" }),
+      copy: "Create your account",
+      image: createIllustration({ ...illustrationTheme, accent: illustrationTheme.accents[0], label: "Quick Start", icon: "🧑" }),
     },
     {
-      title: "Choose Plan",
-      copy: "Pick meals easily",
-      image: createIllustration({ ...illustrationTheme, accent: illustrationTheme.accents[1], label: "Meal Match", icon: "🍱" }),
+      title: "Find Provider",
+      copy: "Discover nearby kitchens",
+      image: createIllustration({ ...illustrationTheme, accent: illustrationTheme.accents[1], label: "Near You", icon: "📍" }),
     },
     {
-      title: "Track Order",
-      copy: "Follow delivery live",
-      image: createIllustration({ ...illustrationTheme, accent: illustrationTheme.accents[2], label: "Live Route", icon: "🛵" }),
+      title: "Subscribe",
+      copy: "Choose your meal plan",
+      image: createIllustration({ ...illustrationTheme, accent: illustrationTheme.accents[2], label: "Meal Plan", icon: "🍱" }),
     },
     {
-      title: "Rate Meal",
-      copy: "Share quick feedback",
-      image: createIllustration({ ...illustrationTheme, accent: illustrationTheme.accents[3], label: "Taste Notes", icon: "⭐" }),
+      title: "Cancel Food",
+      copy: "Skip meals on some days",
+      image: createIllustration({ ...illustrationTheme, accent: illustrationTheme.accents[3], label: "Skip Days", icon: "📅" }),
     },
   ];
 
@@ -146,9 +146,8 @@ function HowItWorks({ dietTheme = "nonveg" }) {
   return (
     <section className="flow" id="process">
       <SectionHead
-        eyebrow="How it works"
-        title="Roadmap for every user"
-        text="Follow the guided flow for customers and providers to start using the platform quickly."
+        title="Daily Tiffin Flow"
+        text="Customers find meals; providers manage menus, orders, and subscribers smoothly."
       />
       <div className="roadmap-board">
         <RoadmapLane title="Order your tiffin" steps={consumerSteps} />

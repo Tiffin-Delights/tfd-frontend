@@ -140,3 +140,34 @@ def list_provider_feedback(
         }
         for fb, customer_name in feedback_rows
     ]
+
+
+@router.get("/public/provider", response_model=list[FeedbackDetailResponse])
+def list_public_provider_feedback(
+    provider_id: int = Query(...),
+    db: Session = Depends(get_db),
+):
+    provider = db.get(Provider, provider_id)
+    if not provider:
+        raise HTTPException(status_code=404, detail="Provider not found")
+
+    feedback_rows = (
+        db.query(Feedback, User.name.label("customer_name"))
+        .join(User, Feedback.user_id == User.user_id)
+        .filter(Feedback.provider_id == provider.provider_id)
+        .order_by(Feedback.created_at.desc())
+        .all()
+    )
+
+    return [
+        {
+            "feedback_id": fb.feedback_id,
+            "user_id": fb.user_id,
+            "provider_id": fb.provider_id,
+            "rating": fb.rating,
+            "comment": fb.comment,
+            "created_at": fb.created_at,
+            "customer_name": customer_name,
+        }
+        for fb, customer_name in feedback_rows
+    ]

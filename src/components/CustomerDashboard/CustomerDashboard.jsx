@@ -91,6 +91,8 @@ function CustomerDashboard({ auth, refreshKey = 0 }) {
   const [renewingSubscriptionId, setRenewingSubscriptionId] = useState(null);
   const [mealSchedulePageBySubscription, setMealSchedulePageBySubscription] =
     useState({});
+  const [visibleMealSubscriptionIndex, setVisibleMealSubscriptionIndex] =
+    useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -227,6 +229,16 @@ function CustomerDashboard({ auth, refreshKey = 0 }) {
     });
   }, [mealScheduleBySubscription]);
 
+  useEffect(() => {
+    setVisibleMealSubscriptionIndex((current) => {
+      if (mealScheduleBySubscription.length === 0) {
+        return 0;
+      }
+
+      return Math.min(current, mealScheduleBySubscription.length - 1);
+    });
+  }, [mealScheduleBySubscription]);
+
   const today = useMemo(() => {
     const value = new Date();
     value.setHours(0, 0, 0, 0);
@@ -347,6 +359,11 @@ function CustomerDashboard({ auth, refreshKey = 0 }) {
     }
   };
 
+  const visibleMealSchedule = mealScheduleBySubscription[visibleMealSubscriptionIndex];
+  const hasPreviousMealSubscription = visibleMealSubscriptionIndex > 0;
+  const hasNextMealSubscription =
+    visibleMealSubscriptionIndex < mealScheduleBySubscription.length - 1;
+
   if (loading) {
     return (
       <div className="customer-dashboard">
@@ -430,9 +447,49 @@ function CustomerDashboard({ auth, refreshKey = 0 }) {
               </p>
             </div>
           ) : (
-            <div className="meal-schedule-grid">
-              {mealScheduleBySubscription.map(({ subscription, dates }) =>
+            <div className="meal-schedule-grid meal-schedule-grid--single">
+              <div className="meal-schedule-provider-nav">
+                <button
+                  type="button"
+                  className="meal-schedule-provider-nav__button"
+                  onClick={() =>
+                    setVisibleMealSubscriptionIndex((current) =>
+                      Math.max(0, current - 1),
+                    )
+                  }
+                  disabled={!hasPreviousMealSubscription}
+                  aria-label="Show previous subscribed provider"
+                >
+                  ←
+                </button>
+                <div className="meal-schedule-provider-nav__status">
+                  <span>Subscribed Provider</span>
+                  <strong>
+                    {visibleMealSubscriptionIndex + 1} of{" "}
+                    {mealScheduleBySubscription.length}
+                  </strong>
+                </div>
+                <button
+                  type="button"
+                  className="meal-schedule-provider-nav__button"
+                  onClick={() =>
+                    setVisibleMealSubscriptionIndex((current) =>
+                      Math.min(
+                        mealScheduleBySubscription.length - 1,
+                        current + 1,
+                      ),
+                    )
+                  }
+                  disabled={!hasNextMealSubscription}
+                  aria-label="Show next subscribed provider"
+                >
+                  →
+                </button>
+              </div>
+
+              {visibleMealSchedule &&
                 (() => {
+                  const { subscription, dates } = visibleMealSchedule;
                   const currentPage =
                     mealSchedulePageBySubscription[
                       subscription.subscription_id
@@ -584,8 +641,7 @@ function CustomerDashboard({ auth, refreshKey = 0 }) {
                       </div>
                     </div>
                   );
-                })(),
-              )}
+                })()}
             </div>
           )}
         </div>

@@ -145,8 +145,33 @@ export async function listProviders(token, city, dietMode, customerLocation) {
   return Array.isArray(data) ? data.map(normalizeProvider) : [];
 }
 
+export async function listPublicTopProviders(limit = 5, dietMode) {
+  const params = new URLSearchParams();
+
+  if (limit) {
+    params.set("limit", String(limit));
+  }
+
+  if (dietMode === "veg" || dietMode === "nonveg") {
+    params.set("diet_mode", dietMode);
+  }
+
+  const query = params.toString() ? `?${params.toString()}` : "";
+  const data = await apiRequest(`/providers/public/top${query}`);
+  return Array.isArray(data) ? data.map(normalizeProvider) : [];
+}
+
+export async function getPublicProvider(providerId) {
+  const data = await apiRequest(`/providers/public/${providerId}`);
+  return normalizeProvider(data);
+}
+
 export async function getProviderMenu(token, providerId) {
   return apiRequest(`/menu/provider/${providerId}`, { token });
+}
+
+export async function getPublicProviderMenu(providerId) {
+  return apiRequest(`/menu/public/provider/${providerId}`);
 }
 
 export async function getProviderOrders(token, providerId) {
@@ -162,6 +187,10 @@ export async function getProviderSubscriptions(token, providerId) {
 export async function getProviderFeedback(token, providerId) {
   const query = providerId ? `?provider_id=${providerId}` : "";
   return apiRequest(`/feedback/provider${query}`, { token });
+}
+
+export async function getPublicProviderFeedback(providerId) {
+  return apiRequest(`/feedback/public/provider?provider_id=${providerId}`);
 }
 
 export async function getMySubscriptions(token) {

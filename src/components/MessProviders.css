@@ -4,6 +4,14 @@
   background: var(--panel-shell-bg);
 }
 
+.public-provider-page {
+  padding-top: 34px;
+}
+
+.public-provider-page .menu-details {
+  margin-top: 32px;
+}
+
 .provider-grid {
   max-width: 1240px;
   margin: 28px auto 0;

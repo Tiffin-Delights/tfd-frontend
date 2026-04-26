@@ -1,30 +1,26 @@
 import { useEffect, useState } from "react";
 import SectionHead from "./SectionHead";
 
-const dishes = [
+const highlights = [
   {
-    name: "Dal Tadka & Veg Pulao",
-    note: "Served with salad and chutney. Jain and less-oil options available.",
+    name: "Find Nearby Tiffin Providers",
+    note: "Customers can discover home-style meal providers near their location and compare plans before subscribing.",
   },
   {
-    name: "Chole Masala with Bhatura",
-    note: "Freshly packed with crunchy onion salad and a side of mint chutney.",
+    name: "Flexible Weekly And Monthly Plans",
+    note: "Choose a subscription that fits your routine, budget, and meal needs without a complicated ordering process.",
   },
   {
-    name: "Palak Paneer & Jeera Rice",
-    note: "Balanced lunch box with soft paneer, jeera rice, and a seasonal side.",
+    name: "Skip Meals When You Need",
+    note: "Users can cancel food for selected days, helping avoid waste and giving more control over daily deliveries.",
   },
   {
-    name: "Veg Biryani with Raita",
-    note: "Fragrant basmati biryani with cooling raita and house-made pickle.",
+    name: "Manage Orders In One Dashboard",
+    note: "Providers can update menus, pricing, service area, photos, orders, and subscribers from one place.",
   },
   {
-    name: "Aloo Gobi with Phulka",
-    note: "Homestyle comfort meal with soft phulkas and fresh-cut salad.",
-  },
-  {
-    name: "Kadhi Pakoda & Steamed Rice",
-    note: "A hearty classic with steamed rice, pakoda kadhi, and crunchy accompaniment.",
+    name: "Build Trust With Ratings And Feedback",
+    note: "Reviews, customer feedback, and provider details help both sides make better decisions with confidence.",
   },
 ];
 
@@ -34,7 +30,7 @@ function Menu() {
   const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
-    if (isPaused || isFlipping || dishes.length <= 1) {
+    if (isPaused || isFlipping || highlights.length <= 1) {
       return undefined;
     }
 
@@ -53,7 +49,7 @@ function Menu() {
     }
 
     const timeoutId = window.setTimeout(() => {
-      setActiveIndex((prev) => (prev + 1) % dishes.length);
+      setActiveIndex((prev) => (prev + 1) % highlights.length);
       setIsFlipping(false);
     }, 1050);
 
@@ -64,7 +60,10 @@ function Menu() {
 
   return (
     <section className="menu" id="menu">
-      <SectionHead eyebrow="OUR" title="Top Providers" />
+      <SectionHead
+        title="Why this platform works for customers and providers"
+        text="From finding nearby tiffin services to managing subscriptions, menus, and delivery updates, these highlights show how the platform supports everyday meal routines."
+      />
       <div className="menu-grid">
         <button
           type="button"
@@ -75,12 +74,12 @@ function Menu() {
           onBlur={() => setIsPaused(false)}
           onClick={() => setIsPaused((prev) => !prev)}
           aria-pressed={isPaused}
-          aria-label={`${dishes[activeIndex].name}. ${isPaused ? "Resume" : "Pause"} page turn animation.`}
+          aria-label={`${highlights[activeIndex].name}. ${isPaused ? "Resume" : "Pause"} page turn animation.`}
         >
           <span className="menu-book-frame" aria-hidden="true" />
           <span className="menu-card-stack">
-            {dishes.map((dish, index) => {
-              const distance = (index - activeIndex + dishes.length) % dishes.length;
+            {highlights.map((item, index) => {
+              const distance = (index - activeIndex + highlights.length) % highlights.length;
               const className = [
                 "menu-page",
                 distance === 0 ? "is-active" : "",
@@ -92,12 +91,12 @@ function Menu() {
                 .join(" ");
 
               return (
-                <span className={className} key={dish.name}>
+                <span className={className} key={item.name}>
                   <span className="menu-page-glow" />
                   <span className="menu-page-content">
                     <span className="menu-page-count">0{index + 1}</span>
-                    <div className="dish">{dish.name}</div>
-                    <p>{dish.note}</p>
+                    <div className="dish">{item.name}</div>
+                    <p>{item.note}</p>
                   </span>
                 </span>
               );
@@ -106,8 +105,8 @@ function Menu() {
           <span className="menu-card-meta">
             {/* <span className="menu-card-kicker">Rotating highlights</span> */}
             <span className="menu-card-dots" aria-hidden="true">
-              {dishes.map((dish, index) => (
-                <span className={index === activeIndex ? "is-active" : ""} key={dish.name} />
+              {highlights.map((item, index) => (
+                <span className={index === activeIndex ? "is-active" : ""} key={item.name} />
               ))}
             </span>
           </span>

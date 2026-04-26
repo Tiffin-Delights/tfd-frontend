@@ -7,6 +7,7 @@ import AccountModal from "./AccountModal";
 
 function MyNavbar({
   onLoginSuccess,
+  onLogout,
   auth: parentAuth,
   setAuth: setParentAuth,
   dietTheme,
@@ -57,20 +58,35 @@ function MyNavbar({
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("tfd_auth");
+    if (onLogout) {
+      onLogout();
+      return;
+    }
+
+    try {
+      localStorage.removeItem("tfd_auth");
+    } catch {
+      // ignore storage write issues
+    }
     setAuth(null);
     if (setParentAuth) {
       setParentAuth(null);
     }
-    window.location.href = "/";
   };
+
+  const navBasePath =
+    !auth?.token && typeof window !== "undefined" && window.location.pathname !== "/"
+      ? "/"
+      : "";
 
   return (
     <header className="header">
       <nav className="navbar">
         {/* Logo */}
         <div className="nav-left">
-          <img src={logo} alt="TB" className="logo" />
+          <a href="/" aria-label="Go to homepage">
+            <img src={logo} alt="TB" className="logo" />
+          </a>
           {/* <span className="brand-name">Tiffin Delight</span> */}
         </div>
 
@@ -78,10 +94,10 @@ function MyNavbar({
         <ul className={`nav-menu ${isMenuOpen ? "active" : ""}`}>
           {!auth?.token && (
             <>
-              <li><a href="#home" onClick={closeMenu}>Home</a></li>
-              <li><a href="#about" onClick={closeMenu}>About Us</a></li>
-              <li><a href="#menu" onClick={closeMenu}>Highlights</a></li>
-              <li><a href="#contact" onClick={closeMenu}>Contact Us</a></li>
+              <li><a href={`${navBasePath}#home`} onClick={closeMenu}>Home</a></li>
+              <li><a href={`${navBasePath}#about`} onClick={closeMenu}>About Us</a></li>
+              <li><a href={`${navBasePath}#menu`} onClick={closeMenu}>Highlights</a></li>
+              <li><a href={`${navBasePath}#contact`} onClick={closeMenu}>Contact Us</a></li>
             </>
           )}
           <li className="diet-toggle-item">
