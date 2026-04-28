@@ -97,7 +97,7 @@ function getProviderSearchText(provider) {
     .toLowerCase();
 }
 
-function MessProviders({ auth, onSubscriptionCreated, onAuthUserUpdate, dietTheme = "nonveg" }) {
+function MessProviders({ auth, onSubscriptionCreated, onAuthUserUpdate, dietTheme = "all" }) {
   const INITIAL_VISIBLE_PROVIDERS = 7;
   const PROVIDERS_LOAD_STEP = 8;
   const [selectedProvider, setSelectedProvider] = useState(null);

@@ -28,9 +28,10 @@ function readPublicProviderRoute() {
 function App() {
   const [dietTheme, setDietTheme] = useState(() => {
     try {
-      return localStorage.getItem("tfd_diet_theme") || "nonveg";
+      const stored = localStorage.getItem("tfd_diet_theme");
+      return stored === "veg" ? "veg" : "all";
     } catch {
-      return "nonveg";
+      return "all";
     }
   });
   const [auth, setAuth] = useState(() => {
@@ -175,7 +176,7 @@ function App() {
         auth={auth}
         setAuth={setAuth}
         dietTheme={dietTheme}
-        onThemeToggle={() => setDietTheme((current) => (current === "veg" ? "nonveg" : "veg"))}
+        onThemeToggle={() => setDietTheme((current) => (current === "veg" ? "all" : "veg"))}
       />
       <main className="page">
         {auth?.user?.role === "provider" ? (

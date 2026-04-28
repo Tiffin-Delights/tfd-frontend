@@ -22,7 +22,7 @@ function getAddress(provider) {
   return provider?.service_address_text || provider?.city || "Address not added";
 }
 
-function Testimonials({ dietTheme = "nonveg", onOpenProvider }) {
+function Testimonials({ dietTheme = "all", onOpenProvider }) {
   const [providers, setProviders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");

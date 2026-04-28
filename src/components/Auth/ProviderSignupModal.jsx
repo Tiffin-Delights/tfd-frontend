@@ -195,7 +195,7 @@ function ProviderSignupModal({ onBack, onClose, onSignupSuccess }) {
               <option value="pure_veg">Pure Veg</option>
               <option value="mixed">Mixed (Veg + Non-Veg)</option>
             </select>
-            <p className="form-hint">This controls how customers discover your mess in veg/non-veg mode.</p>
+            <p className="form-hint">This controls whether your mess appears in Veg Mode.</p>
           </div>
 
           <div className="form-group">

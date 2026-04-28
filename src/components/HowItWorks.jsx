@@ -76,7 +76,7 @@ function RoadmapLane({ audience, title, steps }) {
   );
 }
 
-function HowItWorks({ dietTheme = "nonveg" }) {
+function HowItWorks({ dietTheme = "all" }) {
   const illustrationTheme = useMemo(() => {
     if (dietTheme === "veg") {
       return {

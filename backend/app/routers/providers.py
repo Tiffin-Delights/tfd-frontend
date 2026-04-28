@@ -156,8 +156,6 @@ def list_public_top_providers(
     for provider, rating_value in results:
         if diet_mode == "veg" and provider.provider_food_category != ProviderFoodCategory.pure_veg:
             continue
-        if diet_mode == "nonveg" and provider.provider_food_category != ProviderFoodCategory.non_veg:
-            continue
 
         providers.append(_serialize_provider(provider, rating_value))
         if len(providers) >= limit:
@@ -237,8 +235,6 @@ def list_providers(
         query = query.filter(Provider.city.ilike(f"%{city}%"))
     if diet_mode == "veg":
         query = query.filter(Provider.provider_food_category == ProviderFoodCategory.pure_veg)
-    elif diet_mode == "nonveg":
-        query = query.filter(Provider.provider_food_category == ProviderFoodCategory.mixed)
 
     results = query.order_by(computed_rating.desc(), Provider.provider_id.desc()).all()
 

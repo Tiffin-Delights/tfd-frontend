@@ -1,7 +1,7 @@
 import tfn from "../assets/tfn.jpg";
 import vegImage from "../assets/veg.jpeg";
 
-function Hero({ dietTheme = "nonveg" }) {
+function Hero({ dietTheme = "all" }) {
   const heroImage = dietTheme === "veg" ? vegImage : tfn;
 
   return (

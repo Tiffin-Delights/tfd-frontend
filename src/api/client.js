@@ -132,7 +132,7 @@ export async function listProviders(token, city, dietMode, customerLocation) {
   }
 
   if (dietMode === "veg") {
-    params.set("diet_mode", dietMode);
+    params.set("diet_mode", "veg");
   }
 
   if (customerLocation?.latitude != null && customerLocation?.longitude != null) {
@@ -153,7 +153,7 @@ export async function listPublicTopProviders(limit = 5, dietMode) {
   }
 
   if (dietMode === "veg") {
-    params.set("diet_mode", dietMode);
+    params.set("diet_mode", "veg");
   }
 
   const query = params.toString() ? `?${params.toString()}` : "";
