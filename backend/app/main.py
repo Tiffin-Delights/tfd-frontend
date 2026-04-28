@@ -4,10 +4,12 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.core.config import settings
 from app.routers import auth, feedback, menu, orders, payments, providers, subscriptions, users
-from app.db import init_db
+from app.db import engine, init_db
 
 
 @asynccontextmanager
@@ -30,6 +32,16 @@ app.add_middleware(
 @app.get("/")
 def root():
     return {"message": "Tiffin backend is running"}
+
+
+@app.get("/health")
+def health_check():
+    try:
+        with engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
+        return {"status": "ok", "database": "connected"}
+    except SQLAlchemyError:
+        return {"status": "degraded", "database": "unavailable"}
 
 
 uploads_dir = Path(settings.uploads_dir)
