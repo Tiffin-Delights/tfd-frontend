@@ -7,6 +7,8 @@ import random
 import re
 import sys
 
+from sqlalchemy.exc import IntegrityError
+
 BASE_DIR = Path(__file__).resolve().parents[1]
 if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
@@ -21,14 +23,27 @@ from app.models import (
     MenuItem,
     Order,
     OrderType,
+    Payment,
     PaymentStatus,
     Provider,
+    ProviderPhoto,
     ProviderFoodCategory,
     Subscription,
     SubscriptionPlan,
     SubscriptionStatus,
     User,
     UserRole,
+    Wallet,
+    WalletTransaction,
+    WalletTransactionType,
+)
+from app.services import (
+    ensure_subscription_meals,
+    get_or_create_wallet,
+    payment_transaction_id,
+    provider_photo_folder,
+    provider_photo_storage_path,
+    record_wallet_transaction,
 )
 
 
@@ -65,6 +80,29 @@ VEG_KEYWORDS = {
 
 SEED_RANDOM = random.Random(20260426)
 
+# City geocoding data: (latitude, longitude, sample_address)
+CITY_COORDINATES: dict[str, tuple[float, float, str]] = {
+    "Indore": (22.7196, 75.8577, "Vijay Nagar, Indore"),
+    "Pune": (18.5204, 73.8567, "Kothrud, Pune"),
+    "Ahmedabad": (23.0225, 72.5714, "Navrangpura, Ahmedabad"),
+    "Chennai": (13.0827, 80.2707, "Anna Nagar, Chennai"),
+    "Lucknow": (26.8467, 80.9462, "Gomti Nagar, Lucknow"),
+    "Delhi": (28.7041, 77.1025, "Laxmi Nagar, Delhi"),
+    "Kanpur": (26.4499, 80.3319, "Naubasta, Kanpur"),
+    "Kolkata": (22.5726, 88.3639, "Jadavpur, Kolkata"),
+    "Howrah": (22.5958, 88.2636, "Howrah Station Area, Howrah"),
+    "Kochi": (9.9312, 76.2673, "Ernakulathappan, Kochi"),
+    "Nagpur": (21.1458, 79.0882, "Itwari, Nagpur"),
+    "Nashik": (19.9975, 73.7898, "Nashik Road, Nashik"),
+    "Vadodara": (22.3072, 73.1812, "Alkapuri, Vadodara"),
+    "Jammu": (32.7267, 74.8570, "Gandhi Nagar, Jammu"),
+    "Amritsar": (31.6340, 74.8723, "Mall Road, Amritsar"),
+    "Patna": (25.5941, 85.1376, "Boring Road, Patna"),
+    "Noida": (28.5355, 77.3910, "Sector 18, Noida"),
+    "Jaipur": (26.9124, 75.7873, "C-Scheme, Jaipur"),
+    "Bhopal": (23.1815, 79.9864, "Arera Colony, Bhopal"),
+    "Surat": (21.1702, 72.8311, "Vesu, Surat"),
+}
 
 PROVIDERS: list[dict] = [
     {
@@ -603,6 +641,11 @@ FEEDBACK_COMMENTS = [
 
 DAYS = list(DayOfWeek)
 MEALS = [MealType.breakfast, MealType.lunch, MealType.snacks, MealType.dinner]
+PHOTO_SOURCES = [
+    path
+    for path in (BASE_DIR / "uploads" / "providers").glob("*/*")
+    if path.is_file()
+]
 
 
 def _contains_keyword(text_value: str, keywords: set[str]) -> bool:
@@ -645,6 +688,10 @@ def _build_dish_items(dishes: list[str], provider_category: ProviderFoodCategory
 def upsert_user(session, *, name: str, email: str, phone: str, role: UserRole, location: str, delivery_address: str | None) -> tuple[User, bool]:
     user = session.query(User).filter(User.email == email).first()
     created = False
+    
+    # Get geocoding data for customer location
+    latitude, longitude, location_text = CITY_COORDINATES.get(location, (None, None, None))
+    
     if not user:
         user = User(
             name=name,
@@ -654,23 +701,117 @@ def upsert_user(session, *, name: str, email: str, phone: str, role: UserRole, l
             role=role,
             location=location,
             delivery_address=delivery_address,
+            current_latitude=latitude,
+            current_longitude=longitude,
+            location_text=location_text,
         )
-        session.add(user)
-        session.flush()
-        created = True
-    else:
-        user.name = name
-        user.phone = phone
-        user.password_hash = hash_password("demo12345")
-        user.role = role
-        user.location = location
-        user.delivery_address = delivery_address
+        try:
+            with session.begin_nested():
+                session.add(user)
+                session.flush()
+            created = True
+        except IntegrityError:
+            session.rollback()
+            user = session.query(User).filter(User.email == email).first()
+            created = False
+            if not user:
+                raise
+
+    user.name = name
+    user.phone = phone
+    user.password_hash = hash_password("demo12345")
+    user.role = role
+    user.location = location
+    user.delivery_address = delivery_address
+    user.current_latitude = latitude
+    user.current_longitude = longitude
+    user.location_text = location_text
     return user, created
+
+
+def ensure_wallet(session, user: User) -> tuple[Wallet, bool]:
+    wallet = session.query(Wallet).filter(Wallet.user_id == user.user_id).first()
+    if wallet:
+        return wallet, False
+
+    wallet = get_or_create_wallet(session, user)
+    return wallet, True
+
+
+def seed_wallet_top_up(session, wallet: Wallet, user: User, amount: Decimal) -> bool:
+    existing = (
+        session.query(WalletTransaction)
+        .filter(
+            WalletTransaction.wallet_id == wallet.wallet_id,
+            WalletTransaction.source_type == "seed_topup",
+        )
+        .first()
+    )
+    if existing:
+        return False
+
+    record_wallet_transaction(
+        session,
+        wallet,
+        WalletTransactionType.credit,
+        amount,
+        source_type="seed_topup",
+        note=f"Demo wallet top-up for {user.name}",
+    )
+    return True
+
+
+def seed_provider_photo(session, provider: Provider, provider_user: User, photo_source: Path, display_order: int) -> bool:
+    existing = (
+        session.query(ProviderPhoto)
+        .filter(ProviderPhoto.provider_id == provider.provider_id)
+        .first()
+    )
+    if existing:
+        return False
+
+    target_folder = provider_photo_folder(provider, provider_user)
+    target_file = target_folder / f"seed-{provider.provider_id}-{photo_source.name}"
+    if not target_file.exists():
+        target_file.write_bytes(photo_source.read_bytes())
+
+    session.add(
+        ProviderPhoto(
+            provider_id=provider.provider_id,
+            file_path=provider_photo_storage_path(target_file),
+            display_order=display_order,
+            is_primary=True,
+        )
+    )
+    return True
+
+
+def seed_payment_for_order(session, order: Order) -> bool:
+    existing = session.query(Payment).filter(Payment.order_id == order.order_id).first()
+    if existing:
+        return False
+
+    session.add(
+        Payment(
+            user_id=order.user_id,
+            order_id=order.order_id,
+            amount=order.total_amount,
+            status=PaymentStatus.paid,
+            payment_gateway="tfd_direct",
+            transaction_id=f"SEED-PAY-{order.order_id}",
+        )
+    )
+    return True
 
 
 def upsert_provider(session, provider_user: User, provider_data: dict) -> tuple[Provider, bool]:
     provider = session.query(Provider).filter(Provider.owner_user_id == provider_user.user_id).first()
     created = False
+    
+    # Get geocoding data from CITY_COORDINATES
+    city = provider_data.get("city")
+    latitude, longitude, address_text = CITY_COORDINATES.get(city, (None, None, None))
+    
     if not provider:
         provider = Provider(
             owner_user_id=provider_user.user_id,
@@ -682,18 +823,35 @@ def upsert_provider(session, provider_user: User, provider_data: dict) -> tuple[
             weekly_price=provider_data["weekly_price"],
             monthly_price=provider_data["monthly_price"],
             rating=Decimal("0"),
+            service_address_text=address_text,
+            service_latitude=latitude,
+            service_longitude=longitude,
+            service_radius_km=3.5,  # Default 3.5 km service radius
         )
-        session.add(provider)
-        session.flush()
-        created = True
-    else:
-        provider.owner_name = provider_data["name"]
-        provider.mess_name = provider_data["mess_name"]
-        provider.city = provider_data["city"]
-        provider.contact = provider_data["contact"]
-        provider.provider_food_category = provider_data["provider_food_category"]
-        provider.weekly_price = provider_data["weekly_price"]
-        provider.monthly_price = provider_data["monthly_price"]
+        try:
+            with session.begin_nested():
+                session.add(provider)
+                session.flush()
+            created = True
+        except IntegrityError:
+            session.rollback()
+            provider = session.query(Provider).filter(Provider.owner_user_id == provider_user.user_id).first()
+            created = False
+            if not provider:
+                raise
+
+    provider.owner_name = provider_data["name"]
+    provider.mess_name = provider_data["mess_name"]
+    provider.city = provider_data["city"]
+    provider.contact = provider_data["contact"]
+    provider.provider_food_category = provider_data["provider_food_category"]
+    provider.weekly_price = provider_data["weekly_price"]
+    provider.monthly_price = provider_data["monthly_price"]
+    # Update location data on every sync
+    provider.service_address_text = address_text
+    provider.service_latitude = latitude
+    provider.service_longitude = longitude
+    provider.service_radius_km = 3.5
     return provider, created
 
 
@@ -888,6 +1046,11 @@ def seed_providers() -> None:
     created_feedback = 0
     created_subscriptions = 0
     created_orders = 0
+    created_payments = 0
+    created_wallets = 0
+    created_wallet_transactions = 0
+    created_provider_photos = 0
+    created_subscription_meals = 0
 
     try:
         customer_users: list[User] = []
@@ -904,6 +1067,12 @@ def seed_providers() -> None:
             customer_users.append(user)
             if created:
                 created_users += 1
+
+            wallet, wallet_created = ensure_wallet(session, user)
+            if wallet_created:
+                created_wallets += 1
+            if seed_wallet_top_up(session, wallet, user, Decimal("2000") if len(customer_users) <= 3 else Decimal("1500")):
+                created_wallet_transactions += 1
 
         ratings_matrix = [
             [5, 4, 5, 4, 5, 4],
@@ -951,9 +1120,29 @@ def seed_providers() -> None:
             created_subscriptions += sub_created
             created_orders += order_created
 
+            if PHOTO_SOURCES:
+                photo_source = PHOTO_SOURCES[idx % len(PHOTO_SOURCES)]
+                if seed_provider_photo(session, provider, provider_user, photo_source, 0):
+                    created_provider_photos += 1
+
         # Important: SessionLocal uses autoflush=False. Flush pending inserts before
         # backfill queries so we don't add duplicate (provider_id, day, meal_type) menu rows.
         session.flush()
+
+        all_orders = session.query(Order).all()
+        for order in all_orders:
+            if seed_payment_for_order(session, order):
+                created_payments += 1
+
+        all_subscriptions = session.query(Subscription).filter(Subscription.status == SubscriptionStatus.active).all()
+        for subscription in all_subscriptions:
+            provider = session.get(Provider, subscription.provider_id)
+            if not provider:
+                continue
+            before_count = session.query(Subscription).filter(Subscription.subscription_id == subscription.subscription_id).count()
+            meals = ensure_subscription_meals(session, subscription, provider)
+            if meals and before_count:
+                created_subscription_meals += len(meals)
 
         all_providers = session.query(Provider).all()
         for provider in all_providers:
@@ -974,6 +1163,11 @@ def seed_providers() -> None:
         print(f"Feedback rows created: {created_feedback}")
         print(f"Subscriptions created: {created_subscriptions}")
         print(f"Orders created: {created_orders}")
+        print(f"Payments created: {created_payments}")
+        print(f"Wallets created: {created_wallets}")
+        print(f"Wallet transactions created: {created_wallet_transactions}")
+        print(f"Provider photos created: {created_provider_photos}")
+        print(f"Subscription meals created: {created_subscription_meals}")
     finally:
         session.close()
 
