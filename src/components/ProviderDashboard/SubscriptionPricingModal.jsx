@@ -134,7 +134,7 @@ function SubscriptionPricingModal({ auth, isOpen, onClose, onUpdateSuccess, onPr
               <div className="form-group">
                 <label htmlFor="weekly_price">Weekly Subscription Price (₹) *</label>
                 <div className="input-wrapper">
-                  <span className="currency-symbol">₹</span>
+                  <span className="currency-symbol"></span>
                   <input
                     type="number"
                     id="weekly_price"
@@ -153,7 +153,7 @@ function SubscriptionPricingModal({ auth, isOpen, onClose, onUpdateSuccess, onPr
               <div className="form-group">
                 <label htmlFor="monthly_price">Monthly Subscription Price (₹) *</label>
                 <div className="input-wrapper">
-                  <span className="currency-symbol">₹</span>
+                  <span className="currency-symbol"></span>
                   <input
                     type="number"
                     id="monthly_price"
